@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.2 (2aeb623e1d, 2025-05-12)"
+   sodipodi:docname="logoEmpresaTeis.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.71535494"
+     inkscape:cx="355.06849"
+     inkscape:cy="559.86194"
+     inkscape:window-width="1854"
+     inkscape:window-height="1011"
+     inkscape:window-x="66"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <defs
+     id="defs1">
+    <linearGradient
+       id="swatch95"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#62839d;stop-opacity:1;"
+         offset="0"
+         id="stop95" />
+    </linearGradient>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath27">
+      <rect
+         style="fill:none;stroke:#000000;stroke-width:0.999999;stroke-linecap:butt;stroke-linejoin:bevel;paint-order:stroke markers fill;stop-color:#000000"
+         id="rect28-6"
+         width="46.160622"
+         height="39.922417"
+         x="86.574379"
+         y="420.06253" />
+    </clipPath>
+    <rect
+       x="132.80121"
+       y="205.4924"
+       width="310.33545"
+       height="300.5501"
+       id="rect77" />
+    <rect
+       x="50.324668"
+       y="174.73843"
+       width="78.282817"
+       height="114.62841"
+       id="rect76" />
+    <linearGradient
+       id="linearGradient74"
+       inkscape:collect="always">
+      <stop
+         style="stop-color:#62839d;stop-opacity:1;"
+         offset="0"
+         id="stop75" />
+      <stop
+         style="stop-color:#62839d;stop-opacity:0;"
+         offset="1"
+         id="stop76" />
+    </linearGradient>
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 148.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="210 : 148.5 : 1"
+       inkscape:persp3d-origin="105 : 99 : 1"
+       id="perspective1" />
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient74"
+       id="radialGradient76"
+       cx="97.305086"
+       cy="131.62446"
+       fx="97.305086"
+       fy="131.62446"
+       r="61.220519"
+       gradientTransform="matrix(1,0,0,0.99752139,0,0.32624538)"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <text
+     xml:space="preserve"
+     transform="matrix(0.77133684,0,0,0.71701016,-106.86102,-134.1822)"
+     id="text76"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:192px;font-family:'Noto Serif CJK JP';-inkscape-font-specification:'Noto Serif CJK JP Bold';text-align:start;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect77);display:inline;opacity:0.851;mix-blend-mode:normal;fill:#425667;fill-opacity:1"><tspan
+       x="132.80078"
+       y="398.45219"
+       id="tspan1">E</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:50.8px;font-family:'Noto Serif CJK JP';-inkscape-font-specification:'Noto Serif CJK JP Bold';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;white-space:pre;inline-size:54.1022;display:inline;opacity:1;fill:#748fa7;fill-opacity:1;stroke-width:0.264583"
+     x="71.38356"
+     y="141.65753"
+     id="text101"
+     transform="matrix(3.5314685,0,0,3.0535522,-163.6886,-211.75043)"><tspan
+       x="71.38356"
+       y="141.65753"
+       id="tspan2">T</tspan></text>
+  <path
+     sodipodi:type="star"
+     style="opacity:1;fill:url(#radialGradient76);fill-opacity:1;fill-rule:evenodd;stroke-width:0.264583"
+     id="path29"
+     inkscape:flatsided="false"
+     sodipodi:sides="5"
+     sodipodi:cx="95.648895"
+     sodipodi:cy="128.32217"
+     sodipodi:r1="64.593796"
+     sodipodi:r2="58.482658"
+     sodipodi:arg1="0.23109067"
+     sodipodi:arg2="-2.6707753"
+     inkscape:rounded="0"
+     inkscape:randomized="0"
+     d="M 158.5256,143.11669 43.529277,101.79357 101.00844,192.69324 104.77325,70.555683 36.084568,153.31116 153.40767,119.14912 53.476569,79.395153 122.22143,180.41941 129.14929,73.094628 54.312847,169.69309 Z"
+     inkscape:transform-center-x="-2.8068766"
+     inkscape:transform-center-y="5.4103189"
+     transform="matrix(1.6947712,0,0,1.4814917,-60.801594,-62.431134)" />
+  <path
+     sodipodi:type="spiral"
+     style="opacity:0.751;fill:#62839d;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.264583"
+     id="path30"
+     sodipodi:cx="101.34246"
+     sodipodi:cy="125.38356"
+     sodipodi:expansion="1"
+     sodipodi:revolution="3.1337457"
+     sodipodi:radius="11.204213"
+     sodipodi:argument="-18.088543"
+     sodipodi:t0="0"
+     d="m 101.34246,125.38356 c 0.38943,0.37089 -0.30782,0.70793 -0.61644,0.64726 -0.836344,-0.16441 -0.996055,-1.22663 -0.67808,-1.88014 0.56878,-1.16897 2.11561,-1.34201 3.14384,-0.7089 1.50896,0.92912 1.69788,3.01652 0.73972,4.40753 -1.27707,1.85401 -3.92165,2.05795 -5.671232,0.77055 -2.201672,-1.62006 -2.420171,-4.82879 -0.801368,-6.93493 1.960588,-2.55082 5.73705,-2.78365 8.19863,-0.83219 2.90088,2.29973 3.14792,6.64602 0.86301,9.46233 -2.63802,3.25153 -7.555462,3.51272 -10.726025,0.89383 -3.602596,-2.97574 -3.877883,-8.46523 -0.924655,-11.98972 3.313075,-3.95395 9.37525,-4.24332 13.25342,-0.95548 4.30552,3.65012 4.60895,10.28544 0.9863,14.51712 -2.0166,2.35563 -5.01454,3.73926 -8.10953,3.80172"
+     transform="translate(-1.109589,1.4794521)" />
+</svg>
