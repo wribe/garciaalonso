@@ -850,105 +850,105 @@ const formatearFechaParaInput = (fecha) => {
           </select>
         </div>
       </div>
-      <div class="row mb-3">
-        <div class="row g-2 justify-content-center mt-2">
-        <div class="col-md-3 d-flex align-items-center">
-          <label class="me-2 mb-0 text-nowrap align-middle" for="">Contraseña:</label>
-          <input type="password" v-model="nuevoCliente.password" class="form-control" :class="{ 'is-invalid': !contrasenaValida }"
-            @blur="validarContrasena" required>
+      <!-- Contraseña y Repetir Contraseña -->
+      <div class="mb-3 row g-3 align-items-center justify-content-center">
+        <div class="col-md-4 d-flex align-items-center">
+          <label for="password" class="form-label mb-0 text-nowrap flex-shrink-0 me-2">Contraseña:</label>
+          <input type="password" id="password" v-model="nuevoCliente.password"
+            :disabled="!editingCurrentUser && editando" class="form-control flex-grow-1" />
         </div>
-
-        <div class="col-md-3 d-flex mt-3 align-items-center ms-5">
-          <label class="me-2 mb-0 text-nowrap align-middle" for="">Confirmar Contraseña:</label>
-          <input type="password" v-model="nuevoCliente.password2" class="form-control" :class="{ 'is-invalid': !contrasenaValida }"
-            @blur="validarContrasena" required>
+        <div class="col-md-4 d-flex align-items-center ms-4">
+          <label for="repetirPassword" class="form-label mb-0 text-nowrap flex-shrink-0 me-2">Repetir
+            Contraseña:</label>
+          <input type="password" id="repetirPassword" v-model="repetirPassword"
+            :disabled="!editingCurrentUser && editando" class="form-control flex-grow-1" />
         </div>
-      </div>
-      </div>
-
-      <!-- Aceptar condiciones + Histórico -->
-      <div class="mb-4">
-        <div class="d-flex align-items-center justify-content-between position-relative">
-          <!-- Espacio izquierdo vacío para equilibrar -->
-          <div style="flex: 1"></div>
-
-          <!-- Aceptar condiciones y términos (centro absoluto) -->
-          <div class="position-absolute start-50 translate-middle-x">
-            <div class="form-check d-flex align-items-center">
-              <input type="checkbox" id="avisoLegal" class="form-check-input me-2" v-model="nuevoCliente.lopd"
-                required />
-              <label for="AvisoLegal" class="form-check-label mb-0 text-nowrap">
-                Aceptar términos y condiciones:
-                <a target="_blank" class="text-decoration-none" href="/avisolegal">
-                  Aviso Legal
-                </a>
-              </label>
-            </div>
-          </div>
-
-          <!-- Histórico (derecha) -->
-          <div class="ms-auto me-5">
-            <div class="form-switch d-flex align-items-center">
-              <input type="checkbox" id="historico" v-model="mostrarHistorico" class="form-check-input me-2"
-                @change="cargarClientes" />
-              <label for="historico" class="form-check-label mb-0">Histórico</label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Botón centrado (centro) -->
-      <div class="d-flex justify-content-center align-items-center">
-        <button type="submit" class="btn btn-primary border-0 shadow-none rounded-0">
-          {{ editando ? "Modificar Cliente" : "Guardar" }}
-        </button>
       </div>
     </form>
-    <!-- Lista de Clientes -->
-    <div v-if="admin" class="table-responsive">
-      <h4 class="text-center w-100">Listado Clientes</h4>
-      <table class="table table-bordered table-striped table-hover table-sm align-middle">
-        <thead class="table-primary">
-          <tr>
-            <th class="text-center" scope="col">ID</th>
-            <th scope="col">Apellidos</th>
-            <th scope="col">Nombre</th>
-            <th class="text-center" scope="col">Móvil</th>
-            <th class="text-center" scope="col">Municipio</th>
-            <th class="text-center" scope="col" style="width: 150px">
-              Acciones
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(cliente, index) in clientesPaginados" :key="cliente.id || index">
-            <th scope="row" class="text-center">{{ (currentPage - 1) * clientesPorPage + index + 1 }}</th>
-            <td>{{ cliente.apellidos }}</td>
-            <td>{{ cliente.nombre }}</td>
-            <td class="text-center">{{ cliente.movil }}</td>
-            <td class="text-center">{{ cliente.municipio }}</td>
-            <td class="text-start">
+  </div>
 
-              <button @click="eliminarCliente(cliente.movil)"
-                class="btn btn-danger btn-sm border-0 ms-4 me-2 shadow-none rounded-0">
-                <i class="bi bi-trash"></i>
-              </button>
+  <!-- Aceptar condiciones + Histórico -->
+  <div class="mb-4">
+    <div class="d-flex align-items-center justify-content-between position-relative">
+      <!-- Espacio izquierdo vacío para equilibrar -->
+      <div style="flex: 1"></div>
 
-              <button @click="editarCliente(cliente.movil)" class="btn btn-warning btn-sm shadow-none rounded-0"
-                title="Editar cliente" aria-label="Editar cliente">
-                <i class="bi bi-pencil"></i>
-              </button>
+      <!-- Aceptar condiciones y términos (centro absoluto) -->
+      <div class="position-absolute start-50 translate-middle-x">
+        <div class="form-check d-flex align-items-center">
+          <input type="checkbox" id="avisoLegal" class="form-check-input me-2" v-model="nuevoCliente.lopd" required />
+          <label for="AvisoLegal" class="form-check-label mb-0 text-nowrap">
+            Aceptar términos y condiciones:
+            <a target="_blank" class="text-decoration-none" href="/avisolegal">
+              Aviso Legal
+            </a>
+          </label>
+        </div>
+      </div>
 
-              <button v-if="cliente.historico === false" @click="activarCliente(cliente)"
-                class="btn btn-secondary btn-sm ms-2 border-0 shadow-none rounded-0" title="Activar cliente">
-                <i class="bi bi-person-check"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- Histórico (derecha) -->
+      <div class="ms-auto me-5">
+        <div class="form-switch d-flex align-items-center">
+          <input type="checkbox" id="historico" v-model="mostrarHistorico" class="form-check-input me-2"
+            @change="cargarClientes" />
+          <label for="historico" class="form-check-label mb-0">Histórico</label>
+        </div>
+      </div>
     </div>
   </div>
+
+  <!-- Botón centrado (centro) -->
+  <div class="d-flex justify-content-center align-items-center">
+    <button type="submit" class="btn btn-primary border-0 shadow-none rounded-0">
+      {{ editando ? "Modificar Cliente" : "Guardar" }}
+    </button>
+  </div>
+
+  <!-- Lista de Clientes -->
+  <div v-if="admin" class="table-responsive">
+    <h4 class="text-center w-100">Listado Clientes</h4>
+    <table class="table table-bordered table-striped table-hover table-sm align-middle">
+      <thead class="table-primary">
+        <tr>
+          <th class="text-center" scope="col">ID</th>
+          <th scope="col">Apellidos</th>
+          <th scope="col">Nombre</th>
+          <th class="text-center" scope="col">Móvil</th>
+          <th class="text-center" scope="col">Municipio</th>
+          <th class="text-center" scope="col" style="width: 150px">
+            Acciones
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(cliente, index) in clientesPaginados" :key="cliente.id || index">
+          <th scope="row" class="text-center">{{ (currentPage - 1) * clientesPorPage + index + 1 }}</th>
+          <td>{{ cliente.apellidos }}</td>
+          <td>{{ cliente.nombre }}</td>
+          <td class="text-center">{{ cliente.movil }}</td>
+          <td class="text-center">{{ cliente.municipio }}</td>
+          <td class="text-start">
+
+            <button @click="eliminarCliente(cliente.movil)"
+              class="btn btn-danger btn-sm border-0 ms-4 me-2 shadow-none rounded-0">
+              <i class="bi bi-trash"></i>
+            </button>
+
+            <button @click="editarCliente(cliente.movil)" class="btn btn-warning btn-sm shadow-none rounded-0"
+              title="Editar cliente" aria-label="Editar cliente">
+              <i class="bi bi-pencil"></i>
+            </button>
+
+            <button v-if="cliente.historico === false" @click="activarCliente(cliente)"
+              class="btn btn-secondary btn-sm ms-2 border-0 shadow-none rounded-0" title="Activar cliente">
+              <i class="bi bi-person-check"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
   <!-- Navegación de página-->
   <div v-if="admin" class="d-flex justify-content-center my-3">
     <button class="btn btn-outline-primary btn-sm me-2 rounded-0 border-1 shadow-none" @click="beforePagina"
@@ -965,25 +965,18 @@ const formatearFechaParaInput = (fecha) => {
 </template>
 
 <script setup>
-import provmuniData from "@/data/provmuni.json";
 import { ref, onMounted, computed } from "vue";
-import {
-  getClientes,
-  addCliente,
-  deleteCliente,
-  updateCliente,
-  getClientePorDni
-} from "@/api/clientes.js";
+import { useRouter } from "vue-router";
+import provmuniData from "@/data/provmuni.json";
 import Swal from "sweetalert2";
+import { getClientes, deleteCliente, addCliente, updateCliente, getClientePorDni } from "@/api/clientes.js";
+import { checkAdmin, loginUsuario, getDni } from "@/api/authApi.js";
 import bcrypt from "bcryptjs";
 
+const router = useRouter();
 
-
-
-//////////////// SCRIPTS CRUD ////////////////////
-
-
-const nuevoCliente = ref({
+/* =================================== SCRIPT CRUD =================================== */
+const clienteVacio = {
   dni: "",
   nombre: "",
   apellidos: "",
@@ -992,36 +985,69 @@ const nuevoCliente = ref({
   direccion: "",
   provincia: "",
   municipio: "",
-  fechaAlta: "",
-  historico: true,
+  fecha_alta: "",
+  tipo_cliente: "",
+  historico: false,
   lopd: false,
-  tipoCliente: "",
-  tipo: "user",
-  password: ""
+  password: "",
+  tipo: "user"
+}
+
+const nuevoCliente = ref({
+  ...clienteVacio
 });
 
+const repetirPassword = ref("");
 
-
-
-
-
-// Declaraciones de estado o variables reactivas
-const editando = ref(false); // Estado de edición para el formulario 
+const editando = ref(false);
 const clienteEditandoId = ref(null);
-const mostrarHistorico = ref(false); // Control del estado del checkbox
 
-const clientes = ref([]); // Array de clientes cargados desde la API
-const numClientes = ref(0); // Número total de clientes para paginación
+var mostrarHistorico = ref(false);
 
-const currentPage = ref(1); // Página actual para paginación
-const clientesPorPage = 10; // Número de clientes por página
-const cargando = ref(false);
+var numClientes = ref(0);
+var currentPage = ref(1);
+var clientesPerPage = 10;
 
-const admin = localStorage.getItem("isAdmin") === "true";
-const usuario = localStorage.getItem("isUsusario") === "true";
+const isAdmin = ref(false);
+
+/// se carga en el onmounted ya que necesita llamar al back
+var dni;
+
+// Computed: verifica si está editando su propio perfil
+const editingCurrentUser = computed(() => {
+  return nuevoCliente.value.dni === dni && editando.value;
+});
+
+// Función Listar Clientes con get
+
+const clientes = ref([]);
+
+// Cargar clientes al montar el componente
+
+// Zona Cargar clientes Al Montar el componente 
+onMounted(async () => {
+  // Verificar si es admin mediante API
+  const adminCheck = await checkAdmin();
+  isAdmin.value = adminCheck.isAdmin;
+  dni = await getDni();
 
 
+  if (isAdmin.value) {
+    cargarClientes()
+  }
 
+  if (dni) {
+    buscarClientePorDNI(dni)
+  }
+})
+
+const updateTabla = () => {
+  getClientes(mostrarHistorico.value).then(data => {
+    clientes.value = data
+    numClientes.value = data.length
+
+  })
+}
 
 ///avanzar y retroceder
 
@@ -1033,55 +1059,64 @@ const beforePagina = () => {
 };
 
 const nextPagina = () => {
-  const totalPages = Math.ceil(numClientes.value / clientesPorPage);
   //redondear hacia arriba para mostrar la última página aunque no esté completa
-  if (currentPage.value < totalPages) {
+
+  if (currentPage.value < totalPages.value) {
     currentPage.value++;
   }
 };
 
-
-
-/*
-Propiedad computada para obtener los clientes en la página actual
-computed crea una propiedad reactiva que se actualiza automáticamente
-cuando cambia las dependencias (currentPage o clientes)
-es decir paso pagina o vuelvo atrás cargando los cloentes de esa página
-slice extrae una sección del array clientes
-start es el índice inicial y end el indice final (no incluido)
-*/
 const clientesPaginados = computed(() => {
-  const start = (currentPage.value - 1) * clientesPorPage;
-  const end = start + clientesPorPage;
-  return clientes.value.slice(start, end);
-});
-
-// //Propiedad computada para el numero total de paginas
-// const totalPages = computed(() => {
-//   return Math.ceil(numClientes.value/clientesPorPage)
-// })
+  const start = (currentPage.value - 1) * clientesPerPage
+  const end = start + clientesPerPage
+  return clientes.value.slice(start, end)
+})
 
 
+const cargarClientes = () => {
+  updateTabla()
+  Swal.fire({
+    icon: 'success',
+    title: "Listando Clientes...",
+    showConfirmButton: false,
+    timer: 1500
+  });
+}
 
-// Guardar Clientes
+const totalPages = computed(() => {
+  return Math.ceil(numClientes.value / clientesPerPage)
+})
+
+
 const guardarCliente = async () => {
-  nuevoCliente.value.fecha_alta = formatearFechaParaInput(
-    nuevoCliente.fecha_alta
-  );
+  // Validar contraseñas
+  if (nuevoCliente.value.password !== repetirPassword.value) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error en contraseña',
+      text: 'Las contraseñas no coinciden.',
+      showConfirmButton: true
+    });
+    return;
+  }
+
+  const salt = bcrypt.genSaltSync(10)
+  const hash = bcrypt.hashSync(nuevoCliente.value.password, salt)
+
   // Validar duplicados solo si estás creando (no si editando)
+
   if (!editando.value) {
-    const duplicado = clientes.value.find(
-      (cliente) =>
-        cliente.dni === nuevoCliente.value.dni ||
-        cliente.movil === nuevoCliente.value.movil ||
-        cliente.email === nuevoCliente.value.email
+    const duplicado = clientes.value.find(cliente =>
+      cliente.dni === nuevoCliente.value.dni ||
+      cliente.movil === nuevoCliente.value.movil ||
+      cliente.email === nuevoCliente.value.email
     );
     if (duplicado) {
       Swal.fire({
-        icon: "error",
-        title: "DNI, móvil o email duplicados",
+        icon: 'error',
+        title: 'DNI, móvil o email duplicados',
         showConfirmButton: false,
-        timer: 2000,
+        timer: 2000
       });
       return;
     }
@@ -1089,63 +1124,62 @@ const guardarCliente = async () => {
 
   // Confirmación antes de guardar
   const result = await Swal.fire({
-    title: editando.value
-      ? "¿Desea modificar este cliente?"
-      : "¿Desea grabar este cliente?",
-    icon: "warning",
+    title: editando.value ? '¿Desea modificar este cliente?' : '¿Desea grabar este cliente?',
+    icon: 'warning',
     showCancelButton: true,
-    confirmButtonText: editando.value ? "Modificar" : "Grabar",
-    cancelButtonText: "Cancelar",
+    confirmButtonText: editando.value ? 'Modificar' : 'Grabar',
+    cancelButtonText: 'Cancelar'
   });
 
   if (!result.isConfirmed) return;
-
+  //  cliente.fecha_alta = formatearFechaParaInput(cliente.fecha_alta);
   try {
+
     if (editando.value) {
+      // Validar campos
       // Modificar cliente (PUT)
-      const clienteActualizado = await updateCliente(
-        clienteEditandoId.value,
-        nuevoCliente.value
-      );
+
+      const clienteActualizado = await updateCliente(clienteEditandoId.value, {
+        ...nuevoCliente.value,
+        password: hash
+      });
+
       // Actualiza el cliente en la lista local
-      const index = clientes.value.findIndex(
-        (c) => c.id === clienteEditandoId.value
-      );
+      const index = clientes.value.findIndex(c => c.id === clienteEditandoId.value);
       if (index !== -1) clientes.value[index] = clienteActualizado;
       Swal.fire({
-        icon: "success",
-        title: "Cliente modificado",
+        icon: 'success',
+        title: 'Cliente modificado',
         showConfirmButton: false,
-        timer: 1500,
+        timer: 1500
       });
     } else {
       // Agregar cliente (POST)
-      const clienteAgregado = await addCliente(nuevoCliente.value);
+
+      const clienteAgregado = await addCliente({
+        ...nuevoCliente.value,
+        password: hash
+      });
       clientes.value.push(clienteAgregado);
       Swal.fire({
-        icon: "success",
-        title: "Cliente agregado",
+        icon: 'success',
+        title: 'Cliente agregado',
         showConfirmButton: false,
-        timer: 1500,
+        timer: 1500
       });
+      const data = await loginUsuario(nuevoCliente.value.dni, nuevoCliente.value.password);
+
+      // Guardar token y datos del usuario en sessionStorage
+      sessionStorage.setItem('token', data.token);
+      sessionStorage.setItem('userName', data.nombre);
+      router.push({ name: 'Inicio' }).then(() => window.location.reload());
     }
 
     // Reset formulario y estado
-    nuevoCliente.value = {
-      dni: "",
-      nombre: "",
-      apellidos: "",
-      email: "",
-      movil: "",
-      direccion: "",
-      provincia: "",
-      municipio: "",
-      fecha_alta: "",
-      historico: true,
-    };
-
+    nuevoCliente.value = { ...clienteVacio };
     editando.value = false;
     clienteEditandoId.value = null;
+    repetirPassword.value = ""
 
     // Reset validaciones si tienes (dniValido, movilValido, etc)
     dniValido.value = true;
@@ -1153,96 +1187,65 @@ const guardarCliente = async () => {
     emailValido.value = true;
 
     // Refrescar lista completa (opcional)
-    clientes.value = await getClientes();
+    updateTabla();
+
   } catch (error) {
-    console.error("Error al guardar cliente:", error);
+    console.error('Error al guardar cliente:', error);
     Swal.fire({
-      icon: "error",
-      title: "Error al guardar cliente",
-      text: "Inténtelo de nuevo o contacte con el administrador.",
+      icon: 'error',
+      title: 'Error al guardar cliente',
+      text: 'Inténtelo de nuevo o contacte con el administrador.',
       showConfirmButton: false,
-      timer: 1500,
+      timer: 1500
     });
   }
 };
 
-
-// Cargar Clientes
-onMounted(async () => {
-  cargarClientes();
-  currentPage.value = 1;
-});
-
-const cargarClientes = () => {
-  getClientes(mostrarHistorico.value).then((data) => {
-    clientes.value = data;
-    numClientes.value = data.length
-    currentPage.value = 1
-  });
-  Swal.fire({
-    icon: "success",
-    title: "Listando Clientes...",
-    showConfirmButton: false,
-    timer: 1500,
-  });
-};
-
-
-/* Cargar Cliente
-onMounted(async () => {
-  guardarCliente();
-});
-*/
-
 // Funcion Eliminar Cliente con patch (histórico a false)
 const eliminarCliente = async (movil) => {
-  clientes.value = await getClientes();
-  const clienteAEliminar = clientes.value.find(
-    (cliente) => cliente.movil === movil
-  );
+  // Refrescar lista desde la API
+  cargarClientes();
+  // Buscar cliente completo (que incluye el ID)
+  const clienteAEliminar = clientes.value.find(cliente => cliente.movil === movil);
 
   if (!clienteAEliminar) {
     Swal.fire({
-      icon: "error",
-      title: "Cliente no encontrado",
+      icon: 'error',
+      title: 'Cliente no encontrado',
       showConfirmButton: false,
-      timer: 1500,
+      timer: 1500
     });
     return;
   }
 
+  // Pedir confirmación antes de eliminar
   const result = await Swal.fire({
     title: `¿Eliminar al cliente ${clienteAEliminar.nombre} ${clienteAEliminar.apellidos}?`,
-    icon: "warning",
+    icon: 'warning',
     showCancelButton: true,
-    confirmButtonText: "Sí, eliminar",
-    cancelButtonText: "Cancelar",
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar'
   });
+
+
+  // Si no confirma, salir
   if (!result.isConfirmed) return;
+
+  // Si confirma, eliminar cliente usando la API y movil como ID
   await deleteCliente(clienteAEliminar.id);
-  clientes.value = await getClientes();
+  // Refrescar la lista desde la "API"
+  clientes.value = cargarClientes();
 
   Swal.fire({
-    icon: "success",
-    title: "Cliente eliminado",
+    icon: 'success',
+    title: 'Cliente eliminado',
     showConfirmButton: false,
-    timer: 1500,
+    timer: 1500
   });
 };
 
-// Cargar los clientes al montar el componente 
-onMounted(async () => {
-  clientes.value = await getClientes();
-  Swal.fire({
-    icon: "success",
-    title: "Listando Clientes...",
-    showConfirmButton: false,
-    timer: 1500,
-  });
 
-});
-
-// Función Editar Cliente 
+// Función Editar Cliente (carga datos en el formulario)
 const editarCliente = (movil) => {
   const cliente = clientes.value.find((c) => c.movil === movil);
   if (!cliente) {
@@ -1254,8 +1257,9 @@ const editarCliente = (movil) => {
     });
     return;
   }
+
   // Copiar datos al formulario
-  nuevoCliente.value = { ...cliente }; // 🔁 Aquí cargas el formulario con los datos
+  nuevoCliente.value = { ...cliente, password: "" }; // 🔁 Aquí cargas el formulario con los datos
   editando.value = true;
   // Formatear fecha para el input type="date"
   nuevoCliente.value.fecha_alta = formatearFechaParaInput(cliente.fecha_alta);
@@ -1263,79 +1267,128 @@ const editarCliente = (movil) => {
   filtrarMunicipios();
   nuevoCliente.value.municipio = cliente.municipio; // 🟢 Ahora estamos en modo edición
   clienteEditandoId.value = cliente.id;
+  if (nuevoCliente.value.tipo_cliente === undefined) {
+    nuevoCliente.value.tipo_cliente = "particular"
+  }
 };
 
-///////////////Función para activar cliente (poner historico en true)
+// Función para activar cliente (poner historico en true)
 const activarCliente = async (cliente) => {
   const confirmacion = await Swal.fire({
     title: `¿Activar cliente ${cliente.nombre} ${cliente.apellidos}?`,
-    icon: "question",
+    icon: 'question',
     showCancelButton: true,
-    confirmButtonText: "Activar",
-    cancelButtonText: "Cancelar",
+    confirmButtonText: 'Activar',
+    cancelButtonText: 'Cancelar'
   });
 
   if (!confirmacion.isConfirmed) return;
 
   try {
     // Crear una copia del cliente con historico en true
-    const clienteActivado = { ...cliente, historico: true };
+    const clienteActivado = { ...cliente, historico: false };
 
     // Llamar a la API para actualizar
     const actualizado = await updateCliente(cliente.id, clienteActivado);
 
     // Actualizar la lista local (opcional, también puedes volver a cargar todo)
-    const index = clientes.value.findIndex((c) => c.id === cliente.id);
+    const index = clientes.value.findIndex(c => c.id === cliente.id);
     if (index !== -1) {
       clientes.value[index] = actualizado;
     }
 
     Swal.fire({
-      icon: "success",
-      title: "Cliente reactivado",
+      icon: 'success',
+      title: 'Cliente reactivado',
       showConfirmButton: false,
-      timer: 1500,
+      timer: 1500
     });
 
     // Recargar lista actualizada
-    await cargarClientes();
+    cargarClientes();
+
   } catch (error) {
-    console.error("Error al reactivar cliente:", error);
+    console.error('Error al reactivar cliente:', error);
     Swal.fire({
-      icon: "error",
-      title: "Error al activar cliente",
-      text: "Por favor, intenta de nuevo.",
-      timer: 1500,
+      icon: 'error',
+      title: 'Error al activar cliente',
+      text: 'Por favor, intenta de nuevo.',
+      timer: 1500
     });
   }
 };
 
-/////////////////////SCRIPTS AUXILIARES/////////////////////
+///CODIGO BUSQUEDA COMPONENTES
 
-const dniValido = ref(true);
-const emailValido = ref(true);
+const buscarClientePorDNI = async (dni) => {
+  if (!dni || dni.trim() === '') {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Debe introducir un DNI antes de buscar.',
+      timer: 1500,
+      showConfirmButton: false
+    });
+    return;
+  }
 
-// Conversor de fecha
-const formatearFechaParaInput = (fecha) => {
-  if (!fecha) return "";
-  const partes = fecha.split("/");
-  if (partes.length !== 3) return "";
-  // formato partes = [dd, mm, yyyy]
-  return `${partes[2]}-${partes[1].padStart(2, "0")}-${partes[0].padStart(
-    2,
-    "0"
-  )}`;
-};
+  try {
+    const cliente = await getClientePorDni(dni.trim().toUpperCase());
 
-///// VALIDACIONES /////
+    if (!cliente) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Cliente no encontrado',
+        text: 'No existe ningún cliente con ese DNI.',
+        timer: 1500,
+        showConfirmButton: false
+      });
+      return;
+    }
 
-//Validar email
-const validarEmail = () => {
-  const email = nuevoCliente.value.email.trim();
-  // Expresión simple para email válido
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  emailValido.value = regex.test(email);
-};
+    // ✅ Cargar los datos en el formulario
+    nuevoCliente.value = { ...cliente, password: "" };
+    nuevoCliente.value.fecha_alta = formatearFechaParaInput(cliente.fecha_alta);
+
+    // Actualiza lista de municipios si cambia la provincia
+    filtrarMunicipios();
+    nuevoCliente.value.municipio = cliente.municipio;
+
+    //opcional
+    editando.value = true;
+    clienteEditandoId.value = cliente.id;
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Cliente encontrado y cargado',
+      timer: 1500,
+      showConfirmButton: false
+    });
+  } catch (error) {
+    console.error('Error buscando cliente por DNI:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al buscar cliente',
+      text: 'Verifique la conexión o contacte con el administrador.',
+      timer: 2000,
+      showConfirmButton: false
+    });
+  }
+}
+const vaciarFormulario = async () => {
+  nuevoCliente.value = { ...clienteVacio };
+  repetirPassword.value = "";
+  editando.value = false;
+  clienteEditandoId.value = null;
+
+  dniValido.value = true;
+  movilValido.value = true;
+  emailValido.value = true;
+}
+
+/* =================================== SCRIPT AUXILIARES =================================== */
+
+// Estado de validez del DNI/NIE si la estructura de datos es más compleja se usa reactive
+const dniValido = ref(true); // Por defecto es válido y no muestra error al iniciar
 
 // Función para validar DNI y NIE
 const validarDniNie = (valor) => {
@@ -1360,11 +1413,33 @@ const validarDniNie = (valor) => {
 
 // Validar al salir del campo
 const validarDni = () => {
-  nuevoCliente.value.dni = nuevoCliente.value.dni.trim().toUpperCase();
-  dniValido.value = validarDniNie(nuevoCliente.value.dni);
+  const dni = nuevoCliente.value.dni.trim().toUpperCase();
+  dniValido.value = validarDniNie(dni);
 };
 
-// Validar Movil
+// Función única: capitaliza y asigna en el mismo paso
+const capitalizarTexto = (campo) => {
+  const texto = nuevoCliente.value[campo] ?? "";
+  nuevoCliente.value[campo] = texto
+    .toLowerCase()
+    .split(" ")
+    .map((palabra) => {
+      if (!palabra) return "";
+      return palabra.charAt(0).toLocaleUpperCase() + palabra.slice(1);
+    })
+    .join(" ");
+};
+
+// Validar email
+const emailValido = ref(true);
+const validarEmail = () => {
+  const email = nuevoCliente.value.email.trim();
+  // Expresión simple para email válido
+  const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  emailValido.value = regex.test(email);
+};
+
+// Validar móvil
 const movilValido = ref(true);
 const movilRegex = /^[67]\d{8}$/;
 
@@ -1383,64 +1458,6 @@ const validarMovil = () => {
     movilValido.value = false;
     return false;
   }
-};
-
-
-const agregarCliente = () => {
-  clientes.value.push({ ...nuevoCliente.value });
-  // Reiniciar el formulario
-  nuevoCliente.value = {
-    dni: "",
-    nombre: "",
-    apellidos: "",
-    email: "",
-    movil: "",
-    direccion: "",
-    provincia: "",
-    municipio: "",
-    fechaAlta: "",
-    historico: false,
-  };
-};
-
-
-// Función única: capitaliza y asigna en el mismo paso
-const capitalizarTexto = (campo) => {
-  const texto = nuevoCliente.value[campo] ?? "";
-  nuevoCliente.value[campo] = texto
-    .toLowerCase()
-    .split(" ")
-    .map((palabra) => {
-      if (!palabra) return "";
-      return palabra.charAt(0).toLocaleUpperCase() + palabra.slice(1);
-    })
-    .join(" ");
-};
-
-// Validar contraseñas
-const validarContrasena = () => {
-  const contrasena = nuevoCliente.value.password.trim();
-  const repetir = password2.value.trim();
-
-  if (contrasena === "" || repetir === "") {
-    contrasenaValida.value = false;
-    return false;
-  }
-
-  if (contrasena !== repetir) {
-    contrasenaValida.value = false;
-    Swal.fire({
-      icon: "error",
-      title: "Las contraseñas no coinciden",
-      text: "Por favor, verifica que ambas contraseñas sean iguales.",
-      showConfirmButton: true,
-      timer: 2000,
-    });
-    return false;
-  }
-
-  contrasenaValida.value = true;
-  return true;
 };
 
 // Provincias y municipios
@@ -1471,64 +1488,24 @@ const filtrarMunicipios = () => {
   nuevoCliente.value.municipio = "";
 };
 
+// conversor fecha
+function formatearFechaParaInput(fecha) {
+  if (!fecha) return '';
 
-///CODIGO BUSQUEDA COMPONENTES
-
-const buscarClientePorDNI = async (dni) => {
-  if (!dni || dni.trim() === '') {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Debe introducir un DNI antes de buscar.',
-      timer: 1500,
-      showConfirmButton: false
-    });
-    return;
+  // Detecta formato dd/mm/yyyy
+  if (fecha.includes('/')) {
+    const [dd, mm, yyyy] = fecha.split('/');
+    return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
   }
 
-  try {
-    const cliente = await getClientePorDni(dni.trim().toUpperCase());
-
-    if (!cliente) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Cliente no encontrado',
-        text: 'No existe ningún cliente con ese DNI.',
-        timer: 1500,
-        showConfirmButton: false
-      });
-      return;
-    }
-
-    // ✅ Cargar los datos en el formulario
-    nuevoCliente.value = { ...cliente };
-    nuevoCliente.value.fecha_alta = formatearFechaParaInput(cliente.fecha_alta);
-
-    // Actualiza lista de municipios si cambia la provincia
-    filtrarMunicipios();
-    //opcional
-    editando.value = true;
-    clienteEditandoId.value = cliente.id;
-    nuevoCliente.value = cliente.value;
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Cliente encontrado y cargado',
-      timer: 1500,
-      showConfirmButton: false
-    });
-  } catch (error) {
-    console.error('Error buscando cliente por DNI:', error);
-    Swal.fire({
-      icon: 'error',
-      title: 'Error al buscar cliente',
-      text: 'Verifique la conexión o contacte con el administrador.',
-      timer: 2000,
-      showConfirmButton: false
-    });
+  // Detecta formato yyyy-mm-dd
+  if (fecha.includes('-')) {
+    const partes = fecha.split('-');
+    if (partes.length === 3) return fecha; // ya formato ISO
   }
-};
 
-
+  return '';
+}
 </script>
 
 <style scoped>

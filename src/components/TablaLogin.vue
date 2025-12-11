@@ -19,11 +19,18 @@
         <div class="mb-3">
           <label for="password" class="form-label fw-bold">Contraseña:</label>
           <input type="password" id="password" autocomplete="new-password" class="form-control" v-model="pass"
-            required />
+            placeholder="Más de 4 caracteres" required />
         </div>
 
         <div class="text-center">
           <button type="submit" class="btn btn-primary w-50">Iniciar sesión</button>
+        </div>
+
+        <div class="text-center mt-3">
+          <p class="text-muted mb-0">
+            ¿No tienes cuenta? <router-link to="/clientes"
+              class="text-primary fw-bold text-decoration-none">Regístrate</router-link>
+          </p>
         </div>
       </form>
     </div>
@@ -37,7 +44,6 @@
 
 import Swal from 'sweetalert2';
 import { loginUsuario } from "@/api/authApi.js";
-
 export default {
   name: "TablaLogin",
   data() {
@@ -47,76 +53,64 @@ export default {
     };
   },
 
+  computed: {
+    formularioValido() {
+      return this.pass.length > 4 && this.verificarDNI(this.dni);
+    }
+  },
+
   methods: {
+    verificarDNI(dni) {
+      const dniRegex = /^[0-9]{8}[A-Za-z]$/;
+      return dniRegex.test(dni);
+    },
+
     async iniciarSesion() {
+      // Validar formulario antes de enviar
+      if (!this.formularioValido) {
+        Swal.fire({
+          title: "Formulario inválido",
+          text: "El DNI debe tener 8 dígitos y una letra, y la contraseña más de 4 caracteres.",
+          icon: "warning",
+          confirmButtonText: "Aceptar"
+        });
+        return;
+      }
+
       try {
-
-        this.dni = this.dni.toUpperCase().trim();
-        this.pass = this.pass.trim();
-        if (this.dni === "" || this.pass === "") {
-          Swal.fire({
-            title: "Campos vacíos",
-            text: "Por favor, complete ambos campos.",
-            icon: "warning",
-            confirmButtonText: "Aceptar"
-          });
-          return;
-        }
-
         const data = await loginUsuario(this.dni, this.pass);
 
-        sessionStorage.setItem("token", data.token);
-        sessionStorage.setItem("userName", data.nombre);
-        sessionStorage.setItem("isLogueado", "true");
-
-        if (data.tipo === "admin") {
-          sessionStorage.setItem("isAdmin", "true");
-        } else {
-          sessionStorage.setItem("isAdmin", "false");
-        }
+        // Guardar token y datos del usuario en sessionStorage
+        sessionStorage.setItem('token', data.token);
+        sessionStorage.setItem('userName', data.nombre);
 
         Swal.fire({
           title: "Bienvenido",
           text: `Hola ${data.nombre}`,
           icon: "success",
           showConfirmButton: false,
-          timer: 2000,
+          timer: 2000
         });
         // Redirigir a la página de inicio y recargar con $router
         // $router se usa para evitar problemas de historial en SPA
         // window.location.reload() recarga la página para reflejar el estado autenticado
-        this.$router
-          .push({ name: "Inicio" })
-          .then(() => window.location.reload());
+        this.$router.push({ name: 'Inicio' }).then(() => window.location.reload());
+
       } catch (error) {
         console.error("Error en iniciarSesion:", error);
-
-        let mensajeError =
-          "Error usuario o contraseña. Verifica tus credenciales.";
-
-        // Mostrar mensaje específico según el error
-        if (error.message === "Usuario no encontrado") {
-          mensajeError = "El usuario no existe. Verifica tu DNI.";
-        } else if (error.message === "Usuario inactivo") {
-          mensajeError =
-            "Tu cuenta está inactiva. Contacta con el administrador.";
-        } else if (error.message === "Contraseña incorrecta") {
-          mensajeError = "La contraseña es incorrecta.";
-        }
-
         Swal.fire({
           title: "Error de autenticación",
-          text: mensajeError,
+          text: "Error usuario o contraseña. Verifica tus credenciales.",
           icon: "error",
-          confirmButtonText: "Aceptar",
+          confirmButtonText: "Aceptar"
         });
       }
     },
     // Función única: capitaliza y asigna en el mismo paso
     capitalizarTexto() {
       this.dni = this.dni.toUpperCase().trim();
-    },
-  },
+    }
+  }
 };
 </script>
 

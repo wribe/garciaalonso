@@ -85,6 +85,7 @@ import {
     updateNoticia,
     deleteNoticia
 } from '@/api/noticias'
+import { isAdmin } from "@/api/authApi.js";
 const admin = localStorage.getItem("isAdmin") === "true";
 
 
@@ -97,6 +98,9 @@ const noticiaEditando = ref(null)
 
 // 🔹 Cargar noticias al montar el componente
 onMounted(async () => {
+    // Verificar si es admin mediante API
+    const adminCheck = await checkAdmin();
+    isAdmin.value = adminCheck.isAdmin;
     await cargarNoticias()
 })
 

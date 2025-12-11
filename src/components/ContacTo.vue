@@ -14,29 +14,53 @@
                             <!-- Nombre -->
                             <div class="mb-3">
                                 <label for="nombre" class="form-label fw-semibold">Nombre</label>
-                                <input type="text" id="nombre" v-model="formulario.nombre" class="form-control"
-                                    placeholder="Tu nombre completo" required />
+                                <input 
+                                    type="text" 
+                                    id="nombre" 
+                                    v-model="formulario.nombre"
+                                    class="form-control"
+                                    placeholder="Tu nombre completo"
+                                    required
+                                />
                             </div>
 
                             <!-- Correo Electrónico -->
                             <div class="mb-3">
                                 <label for="email" class="form-label fw-semibold">Correo Electrónico</label>
-                                <input type="email" id="email" v-model="formulario.email" class="form-control"
-                                    placeholder="tucorreo@ejemplo.com" required />
+                                <input 
+                                    type="email" 
+                                    id="email" 
+                                    v-model="formulario.email"
+                                    class="form-control"
+                                    placeholder="tucorreo@ejemplo.com"
+                                    required
+                                />
                             </div>
 
                             <!-- Asunto -->
                             <div class="mb-3">
                                 <label for="asunto" class="form-label fw-semibold">Asunto</label>
-                                <input type="text" id="asunto" v-model="formulario.asunto" class="form-control"
-                                    placeholder="Motivo de tu consulta" required />
+                                <input 
+                                    type="text" 
+                                    id="asunto" 
+                                    v-model="formulario.asunto"
+                                    class="form-control"
+                                    placeholder="Motivo de tu consulta"
+                                    required
+                                />
                             </div>
 
                             <!-- Mensaje -->
                             <div class="mb-3">
                                 <label for="mensaje" class="form-label fw-semibold">Mensaje</label>
-                                <textarea id="mensaje" v-model="formulario.mensaje" class="form-control" rows="5"
-                                    placeholder="Escribe tu mensaje aquí..." required></textarea>
+                                <textarea 
+                                    id="mensaje" 
+                                    v-model="formulario.mensaje"
+                                    class="form-control"
+                                    rows="5"
+                                    placeholder="Escribe tu mensaje aquí..."
+                                    required
+                                ></textarea>
                             </div>
 
                             <!-- Botón Enviar -->
@@ -63,11 +87,17 @@
                         </h5>
                     </div>
                     <div class="card-body p-0">
-                        <iframe
+                        <iframe 
                             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2950.5865753883815!2d-8.692220923738883!3d42.25138037429632!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd2f62e588cfce69%3A0x378485bfa6edd1be!2sAvenida%20de%20Galicia%2C%20101%2C%20Teis%2C%2036216%20Vigo%2C%20Pontevedra!5e0!3m2!1ses!2ses!4v1733847920000!5m2!1ses!2ses"
-                            width="100%" height="400" style="border:0;" allowfullscreen="" loading="lazy"
+                            width="100%" 
+                            height="400" 
+                            style="border:0;" 
+                            allowfullscreen="" 
+                            loading="lazy" 
                             referrerpolicy="no-referrer-when-downgrade"
-                            title="Ubicación Avenida de Galicia, 101, Teis"></iframe>
+                            allow="geolocation"
+                            title="Ubicación Avenida de Galicia, 101, Teis"
+                        ></iframe>
                     </div>
                 </div>
             </div>
@@ -94,7 +124,7 @@ const enviarFormulario = async () => {
 
     try {
         const response = await enviarContacto(formulario.value);
-
+        
         if (response.success) {
             // Mostrar mensaje de éxito
             Swal.fire({
@@ -114,7 +144,7 @@ const enviarFormulario = async () => {
         }
     } catch (error) {
         console.error('Error al enviar formulario:', error);
-
+        
         Swal.fire({
             icon: 'error',
             title: 'Error al enviar',
