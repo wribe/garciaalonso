@@ -253,7 +253,7 @@
 import Swal from "sweetalert2"
 import { ref, computed, onMounted } from "vue"
 import { addArticulo, getArticulos, updateArticulo, deleteArticulo } from "@/api/articulos.js"
-import provmuniData from "@/data/provmuni.json"
+import provmuniData from "../../backend/data/provmuni.json"
 
 const vehiculos = ref([]);
 const currentPage = ref(1);

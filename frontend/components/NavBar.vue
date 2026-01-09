@@ -3,7 +3,7 @@
 
     <div class="container-fluid">
       <!-- Marca o logo -->
-      <img src="/src/assets/logoEmpresaTeis.svg"></img>
+      <img src="../assets/logoEmpresaTeis.svg"></img>
       <a class="navbar-brand" href="#">EmpresaTeis</a>
 
       <!-- Botón de hamburguesa en pantallas pequeñas -->

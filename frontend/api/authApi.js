@@ -34,6 +34,43 @@ export const esAdmin = async () => {
     return {isAdmin : false};
   }
 };
+/*
+// ...existing code...
+export async function checkAdmin() {
+  const token = sessionStorage.getItem('token')
+  if (!token) return false
+  try {
+    const res = await fetch('/api/auth/esAdmin', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (!res.ok) return false
+    const data = await res.json()
+    return !!data.isAdmin
+  } catch {
+    return false
+  }
+}
+
+// opcional: mantener la antigua API
+export const esAdmin = checkAdmin*/
+
+
+/*
+export async function esAdmin() {
+  // implementación mínima: lee token y consulta endpoint backend si lo tienes
+  const token = sessionStorage.getItem('token')
+  if (!token) return false
+  try {
+    const res = await fetch('/api/auth/esAdmin', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (!res.ok) return false
+    const data = await res.json()
+    return !!data.isAdmin
+  } catch {
+    return false
+  }
+}*/
 
 // Función que obtiene el DNI desde el token (más seguro que sessionStorage)
 export const getDni = async () => {
