@@ -22,7 +22,7 @@
     "mongoose": "^8.19.3",
     "multer": "^2.0.2",
     "nvm": "^0.0.4",
-    "resend": "^6.6.0",
+    "resend": "^6.7.0",
     "server": "^1.0.42",
     "server.js": "^1.0.0",
     "sweetalert2": "^11.23.0",

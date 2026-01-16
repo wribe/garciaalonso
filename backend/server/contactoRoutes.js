@@ -1,17 +1,21 @@
 import express from "express";
-import dotenv from "dotenv";
-import { Resend } from "resend";
+import dotenv from 'dotenv'
+dotenv.config()
 
-// Cargar variables de entorno
-dotenv.config();
+import { Resend } from 'resend'
+
+const RESEND_API_KEY = process.env.RESEND_API_KEY
+let resend = null
+if (RESEND_API_KEY) {
+    resend = new Resend(RESEND_API_KEY)
+} else {
+    console.warn('WARN: RESEND_API_KEY no definida. El servicio de email quedará deshabilitado.')
+}
 
 const router = express.Router();
 
-// Inicializar Resend con la API Key
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 // Ruta POST para enviar correo
-router.post("/", async (req, res) => {
+router.post("/contacto", async (req, res) => {
     const { nombre, email, asunto, mensaje } = req.body;
 
     // Validar campos
@@ -22,9 +26,14 @@ router.post("/", async (req, res) => {
         });
     }
 
+    if (!resend) {
+        // No configurado: devolver respuesta controlada
+        return res.status(503).json({ error: 'Servicio de email no configurado' })
+    }
+
     try {
         // Enviar correo con Resend
-        const { data, error } = await resend.emails.send({
+        await resend.emails.send({
             from: "Contacto <onboarding@resend.dev>",
             to: [process.env.EMAIL_TO], // Tu email configurado en .env
             subject: `Nuevo mensaje de contacto: ${asunto}`,
@@ -48,20 +57,10 @@ router.post("/", async (req, res) => {
             `,
         });
 
-        if (error) {
-            console.error("Error al enviar correo:", error);
-            return res.status(400).json({
-                success: false,
-                message: "Error al enviar el correo",
-                error: error.message
-            });
-        }
-
-        console.log("Correo enviado exitosamente:", data);
+        console.log("Correo enviado exitosamente:");
         res.status(200).json({
             success: true,
             message: "Correo enviado correctamente",
-            data
         });
 
     } catch (error) {

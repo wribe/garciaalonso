@@ -14,7 +14,8 @@ import authRoutes from "./authRoutes.js"; // ruta al router backend
 import contactoRoutes from "./contactoRoutes.js"; // ruta al router backend
 
 
-dotenv.config();
+dotenv.config()
+
 const app = express();
 const PORT = process.env.PORT || 5000;  // Use PORT from environment or default to 5000
 
@@ -45,12 +46,20 @@ app.use("/api/contacto", contactoRoutes);
 //console.log("MONGODB_URI =", process.env.MONGODB_URI);
 
 /// Conexión a MongoDB 
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log("Connected to MongoDB a la base de datos BBDD"))
-    .catch((err) => console.error("Could not connect to MongoDB:", err));
+// Validar y obtener la URI de conexión
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI
+if (!MONGODB_URI) {
+  console.error('Falta MONGODB_URI en las variables de entorno. Define MONGODB_URI en .env o exportala antes de ejecutar el servidor.')
+  process.exit(1)
+}
 
-
-
+// Conectar a MongoDB (sin opciones obsoletas)
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('Conectado a MongoDB'))
+  .catch(err => {
+    console.error('Could not connect to MongoDB:', err)
+    process.exit(1)
+  })
 
 //Iniciar el servidor Express en el puerto especificado
 app.listen(PORT, () => {
