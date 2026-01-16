@@ -19,7 +19,18 @@ export const login = async (req, res) => {
         const historico = user.historico
         if (historico) return res.status(400).json({ message: 'Usuario Historico' });
 
+        const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+
         const token = jwt.sign(
+            {
+                dni: user.dni,
+                tipo: user.tipo || 'user'
+            },
+            JWT_SECRET,
+            { expiresIn: '2h' }
+        );
+
+        /*const token = jwt.sign(
             {
                 dni: user.dni,
                 tipo: user.tipo || 'user',
@@ -27,7 +38,7 @@ export const login = async (req, res) => {
             },
             process.env.JWT_SECRET,
             { expiresIn: '2h' }
-        );
+        );*/
 
         res.json({ token, nombre: user.nombre, tipo: user.tipo || 'user' });
     } catch (error) {
@@ -40,6 +51,7 @@ export const login = async (req, res) => {
 // Middleware: verificar JWT
 // Se usa en rutas que requieren autenticación
 // Verifica el token enviado en el header Authorization
+
 
 export const verificarToken = (req, res, next) => {
     const authHeader = req.headers.authorization; // Authorization: Bearer <token>
@@ -68,7 +80,33 @@ export const soloAdmin = (req, res, next) => {
 };
 
 // Función para verificar si el token pertenece a un admin
-export const checkAdmin = (req, res) => {
+export const checkAdmin = async (req, res) => {
+    try {
+        const auth = req.headers.authorization;
+        if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ message: 'No autorizado' });
+        const token = auth.split(' ')[1];
+
+        const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+
+        let decoded;
+        try {
+            decoded = jwt.verify(token, JWT_SECRET);
+        } catch (err) {
+            return res.status(401).json({ message: 'Token inválido' });
+        }
+
+        // Intentar devolver info del usuario desde json-server para confirmar rol y nombre
+        const response = await axios.get(`http://localhost:3000/clientes?dni=${decoded.dni}`);
+        const user = response.data && response.data[0];
+        if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+        return res.json({ tipo: user.tipo || 'user', nombre: user.nombre || '' });
+    } catch (error) {
+        console.error('Error en checkAdmin:', error.message || error);
+        res.status(500).json({ message: 'Error en el servidor' });
+    }
+}
+/*export const checkAdmin = (req, res) => {
     const authHeader = req.headers.authorization;
     
     if (!authHeader) {
@@ -92,7 +130,7 @@ export const checkAdmin = (req, res) => {
     } catch (err) {
         return res.status(403).json({ isAdmin: false, mensaje: "Token inválido o expirado" });
     }
-};
+};*/
 
 // Función para verificar el token y devolver el DNI contenido en él
 export const checkDni = (req, res) => {

@@ -7,6 +7,8 @@ router.post("/login", login);
 router.get("/check-admin", checkAdmin);
 router.get("/check-dni", checkDni);
 
+//Si no va, quitar lo de abajo
+
 router.get("/modelos",verificarToken, soloAdmin, (req, res) => {
     // Lógica para obtener modelos (solo accesible por admin)
     res.json({ message: `Hola ${req.user.dni}, estas autenticado como admin` });

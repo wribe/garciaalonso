@@ -1,4 +1,19 @@
 // models/Articulo.js
+
+import mongoose from 'mongoose';
+
+const articuloSchema = new mongoose.Schema({
+    titulo: { type: String, required: false },
+    descripcion: { type: String, required: false },
+    precio: { type: Number, required: false },
+    imagen: { type: String, required: false },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Articulo = mongoose.models.Articulo || mongoose.model('Articulo', articuloSchema);
+export default Articulo;
+// backend/modelos/Articulo.js
+/*
 import mongoose from "mongoose";
 
 const ArticuloSchema = new mongoose.Schema(
@@ -46,4 +61,4 @@ const ArticuloSchema = new mongoose.Schema(
     }
 );
 
-export default mongoose.model("Articulo", ArticuloSchema);
+export default mongoose.model("Articulo", ArticuloSchema);*/

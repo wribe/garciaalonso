@@ -1,9 +1,9 @@
 import express from "express";
-import dotenv from 'dotenv'
+import dotenv from 'dotenv';
+import { Resend } from "resend";
+
 dotenv.config()
-
-import { Resend } from 'resend'
-
+/*
 const RESEND_API_KEY = process.env.RESEND_API_KEY
 let resend = null
 if (RESEND_API_KEY) {
@@ -11,8 +11,12 @@ if (RESEND_API_KEY) {
 } else {
     console.warn('WARN: RESEND_API_KEY no definida. El servicio de email quedará deshabilitado.')
 }
-
+*/
 const router = express.Router();
+
+// Inicializar Resend sólo si tenemos API key
+// Inicializar Resend con la API Key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Ruta POST para enviar correo
 router.post("/contacto", async (req, res) => {
@@ -26,7 +30,7 @@ router.post("/contacto", async (req, res) => {
         });
     }
 
-    if (!resend) {
+    if (!resend) { //Esto ver si hay que dejarlo
         // No configurado: devolver respuesta controlada
         return res.status(503).json({ error: 'Servicio de email no configurado' })
     }
