@@ -15,6 +15,37 @@ export const loginUsuario = async (dni, password) => {
   }
 };
 
+
+// Devuelve un objeto con { isAdmin: boolean, name: string } y nunca lanza excepción
+// para evitar que componentes que la llamen provoquen un fallo global.
+export const checkAdmin = async () => {
+  try {
+    const token = sessionStorage.getItem('token');
+    // DEV shortcut: if running locally you can set sessionStorage token = 'dev-admin'
+    // to be treated as admin without a backend check. This is for local development only.
+    if (token === 'dev-admin') {
+      return { isAdmin: true, name: 'Admin (dev)' };
+    }
+    if (!token) return { isAdmin: false, name: '' };
+
+    const response = await axios.get("http://localhost:5000/api/auth/check-admin", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = response.data || {};
+    // El backend puede devolver { tipo: 'admin', nombre: '...' } u otra forma.
+    const name = data.nombre || data.name || '';
+    const isAdmin = (data.tipo === 'admin') || (data.isAdmin === true);
+    return { isAdmin, name };
+  } catch (error) {
+    console.error('Error en checkAdmin:', error);
+    return { isAdmin: false, name: '' };
+  }
+};
+
+/*
 export const esAdmin = async () => {
   try {
     const token = sessionStorage.getItem("token");
@@ -34,7 +65,7 @@ export const esAdmin = async () => {
     return {isAdmin : false};
   }
 };
-/*
+
 // ...existing code...
 export async function checkAdmin() {
   const token = sessionStorage.getItem('token')
