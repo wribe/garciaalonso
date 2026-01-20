@@ -59,9 +59,32 @@ export async function getDni() {
     const token = sessionStorage.getItem('token');
     if (!token) return undefined;
     // Llama a tu backend para obtener el usuario actual
-    const res = await axios.get('/api/usuario', {
+    const res = await axios.get('/api/clientes/usuario', {
         headers: { Authorization: `Bearer ${token}` }
     });
     return res.data.dni;
+}
+
+// Función para loguear usuario
+export async function loginUsuario(dni, password) {
+    const res = await axios.post("/api/auth/login", { dni, password });
+    return res.data;
+}
+
+// Nueva función: obtener cliente logueado
+export async function getClienteLogueado() {
+    const token = sessionStorage.getItem('token');
+    if (!token) return null;
+
+    try {
+        // Llama a tu API para obtener el cliente por su DNI
+        const response = await axios.get('/api/clientes/usuario', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error obteniendo cliente logueado:', error);
+        return null;
+    }
 }
 

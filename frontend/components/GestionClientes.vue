@@ -122,26 +122,73 @@
       <div class="mb-3 row g-3 align-items-center justify-content-center">
         <div class="col-md-4 d-flex align-items-center">
           <label for="password" class="form-label mb-0 text-nowrap flex-shrink-0 me-2">Contraseña:</label>
-          <input type="password" id="password" v-model="nuevoCliente.password"
-            :disabled="!editingCurrentUser && editando" class="form-control flex-grow-1" />
+          <input
+            type="password"
+            id="password"
+            v-model="nuevoCliente.password"
+            class="form-control flex-grow-1"
+            required
+            autocomplete="new-password"
+          />
         </div>
         <div class="col-md-4 d-flex align-items-center ms-4">
-          <label for="repetirPassword" class="form-label mb-0 text-nowrap flex-shrink-0 me-2">Repetir
-            Contraseña:</label>
-          <input type="password" id="repetirPassword" v-model="repetirPassword"
-            :disabled="!editingCurrentUser && editando" class="form-control flex-grow-1" />
+          <label for="repetirPassword" class="form-label mb-0 text-nowrap flex-shrink-0 me-2">Repetir Contraseña:</label>
+          <input
+            type="password"
+            id="repetirPassword"
+            v-model="repetirPassword"
+            class="form-control flex-grow-1"
+            required
+            autocomplete="new-password"
+          />
         </div>
+      </div>
+      <!-- Aceptar condiciones + Histórico -->
+      <div class="mb-4">
+        <div class="d-flex align-items-center justify-content-between position-relative">
+          <!-- Espacio izquierdo vacío para equilibrar -->
+          <div style="flex: 1"></div>
+
+          <!-- Aceptar condiciones y términos (centro absoluto) -->
+          <div class="position-absolute start-50 translate-middle-x">
+            <div class="form-check d-flex align-items-center">
+              <input type="checkbox" id="avisoLegal" class="form-check-input me-2" v-model="nuevoCliente.lopd"
+                required />
+              <label for="AvisoLegal" class="form-check-label mb-0 text-nowrap">
+                Aceptar términos y condiciones:
+                <a target="_blank" class="text-decoration-none" href="/avisolegal">
+                  Aviso Legal
+                </a>
+              </label>
+            </div>
+          </div>
+
+          <!-- Histórico (derecha) -->
+          <div class="ms-auto me-5">
+            <div class="form-switch d-flex align-items-center">
+              <input type="checkbox" id="historico" v-model="mostrarHistorico" class="form-check-input me-2"
+                @change="cargarClientes" />
+              <label for="historico" class="form-check-label mb-0">Histórico</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Botón centrado (centro) -->
+      <div class="d-flex justify-content-center align-items-center">
+        <button type="submit" class="btn btn-primary border-0 shadow-none rounded-0">
+          {{ editando ? "Modificar Cliente" : "Guardar" }}
+        </button>
       </div>
     </form>
   </div>
 
-  <!-- Aceptar condiciones + Histórico -->
+  <!--Aceptar condiciones + Histórico
   <div class="mb-4">
     <div class="d-flex align-items-center justify-content-between position-relative">
-      <!-- Espacio izquierdo vacío para equilibrar -->
+      Espacio izquierdo vacío para equilibrar 
       <div style="flex: 1"></div>
 
-      <!-- Aceptar condiciones y términos (centro absoluto) -->
+      Aceptar condiciones y términos (centro absoluto) 
       <div class="position-absolute start-50 translate-middle-x">
         <div class="form-check d-flex align-items-center">
           <input type="checkbox" id="avisoLegal" class="form-check-input me-2" v-model="nuevoCliente.lopd" required />
@@ -154,7 +201,7 @@
         </div>
       </div>
 
-      <!-- Histórico (derecha) -->
+      Histórico (derecha) 
       <div class="ms-auto me-5">
         <div class="form-switch d-flex align-items-center">
           <input type="checkbox" id="historico" v-model="mostrarHistorico" class="form-check-input me-2"
@@ -163,14 +210,14 @@
         </div>
       </div>
     </div>
-  </div>
+  </div>-->
 
-  <!-- Botón centrado (centro) -->
+  <!-- Botón centrado (centro) 
   <div class="d-flex justify-content-center align-items-center">
     <button type="submit" class="btn btn-primary border-0 shadow-none rounded-0">
       {{ editando ? "Modificar Cliente" : "Guardar" }}
     </button>
-  </div>
+  </div>-->
 
   <!-- Lista de Clientes -->
   <div v-if="admin" class="table-responsive">
@@ -190,7 +237,7 @@
       </thead>
       <tbody>
         <tr v-for="(cliente, index) in clientesPaginados" :key="cliente.id || index">
-          <th scope="row" class="text-center">{{ (currentPage - 1) * clientesPorPage + index + 1 }}</th>
+          <th scope="row" class="text-center">{{ (currentPage - 1) * clientesPerPage + index + 1 }}</th>
           <td>{{ cliente.apellidos }}</td>
           <td>{{ cliente.nombre }}</td>
           <td class="text-center">{{ cliente.movil }}</td>
@@ -238,7 +285,7 @@ import { useRouter } from "vue-router";
 import provmuniData from "../../backend/data/provmuni.json";
 import Swal from "sweetalert2";
 import { getClientes, deleteCliente, addCliente, updateCliente, getClientePorDni, getDni } from "@/api/clientes.js";
-import {  checkAdmin } from '@/api/authApi.js'
+import { registerUsuario, loginUsuario, checkAdmin } from "@/api/authApi.js";
 import bcrypt from "bcryptjs";
 
 const router = useRouter();
@@ -274,7 +321,7 @@ var mostrarHistorico = ref(false);
 
 var numClientes = ref(0);
 var currentPage = ref(1);
-var clientesPerPage = 10;
+var clientesPerPage = ref(10);
 
 const isAdmin = ref(false);
 const admin = ref(false)
@@ -282,17 +329,15 @@ const admin = ref(false)
 /// se carga en el onmounted ya que necesita llamar al back
 var dni;
 
-// Computed: verifica si está editando su propio perfil
+/// Computed: verifica si está editando su propio perfil
 const editingCurrentUser = computed(() => {
   return nuevoCliente.value.dni === dni && editando.value;
 });
 
-// Función Listar Clientes con get
-
+/// Función Listar Clientes con get
 const clientes = ref([]);
 
-// Cargar clientes al montar el componente
-
+/// Cargar clientes al montar el componente
 // Zona Cargar clientes Al Montar el componente 
 onMounted(async () => {
   const adminCheck = await checkAdmin();
@@ -335,8 +380,8 @@ const nextPagina = () => {
 };
 
 const clientesPaginados = computed(() => {
-  const start = (currentPage.value - 1) * clientesPerPage
-  const end = start + clientesPerPage
+  const start = (currentPage.value - 1) * clientesPerPage.value
+  const end = start + clientesPerPage.value
   return clientes.value.slice(start, end)
 })
 
@@ -352,7 +397,7 @@ const cargarClientes = () => {
 }
 
 const totalPages = computed(() => {
-  return Math.ceil(numClientes.value / clientesPerPage)
+  return Math.ceil(numClientes.value / clientesPerPage.value)
 })
 
 
@@ -402,6 +447,7 @@ const guardarCliente = async () => {
   if (!result.isConfirmed) return;
   //  cliente.fecha_alta = formatearFechaParaInput(cliente.fecha_alta);
   try {
+    console.log('Datos a guardar:', { ...nuevoCliente.value, password: '***' });
 
     if (editando.value) {
       // Validar campos
@@ -422,25 +468,28 @@ const guardarCliente = async () => {
         timer: 1500
       });
     } else {
-      // Agregar cliente (POST)
-
-      const clienteAgregado = await addCliente({
-        ...nuevoCliente.value,
-        password: hash
+      // 1. Registrar usuario en MongoDB
+      await registerUsuario({
+        dni: nuevoCliente.value.dni,
+        password: nuevoCliente.value.password, // <-- aquí envías la contraseña
+        nombre: nuevoCliente.value.nombre,
+        email: nuevoCliente.value.email,
+        movil: nuevoCliente.value.movil,
+        direccion: nuevoCliente.value.direccion
       });
-      clientes.value.push(clienteAgregado);
+
+      // 2. Login automático tras registrar
+      const data = await loginUsuario(nuevoCliente.value.dni, nuevoCliente.value.password);
+      sessionStorage.setItem('token', data.token);
+      sessionStorage.setItem('userName', data.nombre);
+      router.push({ name: 'Inicio' }).then(() => window.location.reload());
+
       Swal.fire({
         icon: 'success',
         title: 'Cliente agregado',
         showConfirmButton: false,
         timer: 1500
       });
-      const data = await loginUsuario(nuevoCliente.value.dni, nuevoCliente.value.password);
-
-      // Guardar token y datos del usuario en sessionStorage
-      sessionStorage.setItem('token', data.token);
-      sessionStorage.setItem('userName', data.nombre);
-      router.push({ name: 'Inicio' }).then(() => window.location.reload());
     }
 
     // Reset formulario y estado
@@ -459,12 +508,13 @@ const guardarCliente = async () => {
 
   } catch (error) {
     console.error('Error al guardar cliente:', error);
+    alert(error?.response?.data?.message || error.message || 'Error desconocido');
     Swal.fire({
       icon: 'error',
       title: 'Error al guardar cliente',
-      text: 'Inténtelo de nuevo o contacte con el administrador.',
+      text: error?.response?.data?.message || error.message || 'Inténtelo de nuevo o contacte con el administrador.',
       showConfirmButton: false,
-      timer: 1500
+      timer: 3000
     });
   }
 };

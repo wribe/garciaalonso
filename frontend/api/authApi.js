@@ -1,22 +1,25 @@
 // authApi.js
-import axios from 'axios'
+import axios from "axios";
 
-export const loginUsuario = async (dni, password) => {
-  const res = await axios.post('/api/auth/login', { dni, password })
-  return res.data
+export async function registerUsuario(usuario) {
+  // usuario: { dni, password, nombre, email, movil, direccion }
+  const res = await axios.post("/api/auth/register", usuario);
+  return res.data;
+}
+
+export async function loginUsuario(dni, password) {
+  const res = await axios.post("/api/auth/login", { dni, password });
+  return res.data;
 }
 
 // devuelve { isAdmin: boolean, name: string } de forma segura
 export const checkAdmin = async () => {
-  try {
-    const token = sessionStorage.getItem('token')
-    if (!token) return { isAdmin: false, name: '' }
-    const res = await axios.get('/api/auth/check-admin', { headers: { Authorization: `Bearer ${token}` } })
-    return res.data // { isAdmin, name }
-  } catch (err) {
-    console.error(err)
-    return { isAdmin: false, name: '' }
-  }
+  const token = sessionStorage.getItem('token');
+  if (!token) return { isAdmin: false, name: '' };
+  const res = await axios.get("/api/auth/check-admin", {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.data;
 }
 
 // alias antiguo si componentes usan esAdmin

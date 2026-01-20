@@ -4,10 +4,10 @@ dotenv.config()
 import express from 'express'
 import mongoose from 'mongoose'
 import cors from 'cors'
-import clientesRouter from './clientesRoutes.js'
+import clientesRouter from './clientesRoutes.js';
 import modelosRouter from './modelosRoutes.js'
 import contactoRouter from './contactoRoutes.js'
-import authRouter from './authRoutes.js'
+import authRoutes from './authRoutes.js';
 import ventasRouter from './ventasRoutes.js'
 import checkoutRouter from './checkoutRoutes.js'
 import printRouter from './printRoutes.js'
@@ -23,8 +23,8 @@ console.log('Conectado a MongoDB')
 const app = express()
 app.use(cors()); app.use(express.json())
 
-app.use('/api/auth', authRouter)
-app.use('/api/clientes', clientesRouter)
+app.use('/api/auth', authRoutes);
+app.use('/api/clientes', clientesRouter);
 app.use('/api/modelos', modelosRouter)
 app.use('/api/contacto', contactoRouter)
 app.use('/api/ventas', ventasRouter)
@@ -36,5 +36,8 @@ app.post('/api/chat', (req, res) => {
     res.json({ ok: true })
 })
 
-const PORT = process.env.PORT || 5000
-app.listen(PORT, () => console.log(`Server Express está corriendo en el puerto: ${PORT}`))
+const PORT = 5000;
+app.listen(PORT, () => {
+    console.log(`Servidor escuchando en puerto ${PORT}`);
+});
+

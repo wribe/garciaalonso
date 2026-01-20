@@ -1,4 +1,5 @@
 import express from 'express'
+import jwt from 'jsonwebtoken'
 import Cliente from '../modelos/Cliente.js'
 import { authMiddleware, adminMiddleware } from './middleware/auth.js'
 const router = express.Router()
@@ -83,6 +84,21 @@ router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
     const clients = await Cliente.find(filter).skip((page - 1) * limit).limit(parseInt(limit)).select('-passwordHash')
     res.json({ total, page: Number(page), limit: Number(limit), data: clients })
   } catch (err) { res.status(500).json({ error: 'Error' }) }
+})
+
+router.get('/usuario', async (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ message: 'No token' });
+
+    const token = authHeader.split(' ')[1];
+    try {
+        const payload = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await Cliente.findOne({ dni: payload.dni });
+        if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+        res.json(user);
+    } catch (error) {
+        res.status(401).json({ message: 'Token inválido' });
+    }
 })
 
 export default router
