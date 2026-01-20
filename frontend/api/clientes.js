@@ -26,18 +26,18 @@ export const getClientes = (mostrarHistorico) => {
 //Si quieres eliminarla fisicamente, usa axios.delete
 export const deleteCliente = (id) => {
     return axios.patch(`${API_URL}/${id}`, { historico: false })
-                .then(res => res.data)
+        .then(res => res.data)
 }
 
 // Función para agregar cliente nuevo
 export const addCliente = (nuevoCliente) => {
     return axios.post(API_URL, nuevoCliente)
-                .then(res => res.data)
+        .then(res => res.data)
 }
 // Función para actualizar un cliente por su id
 export const updateCliente = (id, clienteActualizado) => {
     return axios.put(`${API_URL}/${id}`, clienteActualizado)
-                .then(res => res.data)
+        .then(res => res.data)
 }
 
 // 🔹 Buscar cliente por DNI
@@ -52,4 +52,16 @@ export const getClientePorDni = async (dni) => {
         throw error;
     }
 };
+
+// Nueva función sugerida: obtener cliente por DNI desde otra API
+export async function getDni() {
+    // Por ejemplo, si el token está en sessionStorage
+    const token = sessionStorage.getItem('token');
+    if (!token) return undefined;
+    // Llama a tu backend para obtener el usuario actual
+    const res = await axios.get('/api/usuario', {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data.dni;
+}
 

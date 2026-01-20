@@ -1,49 +1,29 @@
 // authApi.js
-import axios from "axios";
+import axios from 'axios'
 
-// Función que llama al backend para login usando JWT real
 export const loginUsuario = async (dni, password) => {
-  try {
-    const response = await axios.post("http://localhost:5000/api/auth/login", {
-      dni,
-      password
-    });
-    return response.data; // { token, nombre, tipo }
-  } catch (error) {
-    console.error("Error en loginUsuario:", error);
-    throw error;
-  }
-};
+  const res = await axios.post('/api/auth/login', { dni, password })
+  return res.data
+}
 
-
-// Devuelve un objeto con { isAdmin: boolean, name: string } y nunca lanza excepción
-// para evitar que componentes que la llamen provoquen un fallo global.
+// devuelve { isAdmin: boolean, name: string } de forma segura
 export const checkAdmin = async () => {
   try {
-    const token = sessionStorage.getItem('token');
-    // DEV shortcut: if running locally you can set sessionStorage token = 'dev-admin'
-    // to be treated as admin without a backend check. This is for local development only.
-    if (token === 'dev-admin') {
-      return { isAdmin: true, name: 'Admin (dev)' };
-    }
-    if (!token) return { isAdmin: false, name: '' };
-
-    const response = await axios.get("http://localhost:5000/api/auth/check-admin", {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
-    const data = response.data || {};
-    // El backend puede devolver { tipo: 'admin', nombre: '...' } u otra forma.
-    const name = data.nombre || data.name || '';
-    const isAdmin = (data.tipo === 'admin') || (data.isAdmin === true);
-    return { isAdmin, name };
-  } catch (error) {
-    console.error('Error en checkAdmin:', error);
-    return { isAdmin: false, name: '' };
+    const token = sessionStorage.getItem('token')
+    if (!token) return { isAdmin: false, name: '' }
+    const res = await axios.get('/api/auth/check-admin', { headers: { Authorization: `Bearer ${token}` } })
+    return res.data // { isAdmin, name }
+  } catch (err) {
+    console.error(err)
+    return { isAdmin: false, name: '' }
   }
-};
+}
+
+// alias antiguo si componentes usan esAdmin
+export const esAdmin = async () => {
+  const r = await checkAdmin()
+  return r.isAdmin
+}
 
 /*
 export const esAdmin = async () => {
@@ -66,43 +46,6 @@ export const esAdmin = async () => {
   }
 };
 
-// ...existing code...
-export async function checkAdmin() {
-  const token = sessionStorage.getItem('token')
-  if (!token) return false
-  try {
-    const res = await fetch('/api/auth/esAdmin', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    if (!res.ok) return false
-    const data = await res.json()
-    return !!data.isAdmin
-  } catch {
-    return false
-  }
-}
-
-// opcional: mantener la antigua API
-export const esAdmin = checkAdmin*/
-
-
-/*
-export async function esAdmin() {
-  // implementación mínima: lee token y consulta endpoint backend si lo tienes
-  const token = sessionStorage.getItem('token')
-  if (!token) return false
-  try {
-    const res = await fetch('/api/auth/esAdmin', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    if (!res.ok) return false
-    const data = await res.json()
-    return !!data.isAdmin
-  } catch {
-    return false
-  }
-}*/
-
 // Función que obtiene el DNI desde el token (más seguro que sessionStorage)
 export const getDni = async () => {
   try {
@@ -110,15 +53,15 @@ export const getDni = async () => {
     if (!token) {
       throw new Error('Token no encontrado en sessionStorage');
     }
-    
-    const response = await axios.get("http://localhost:5000/api/auth/check-dni", 
+
+    const response = await axios.get("http://localhost:5000/api/auth/check-dni",
       {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       }
     );
-    
+
     // Devuelve el DNI extraído del token (fuente confiable)
     return response.data.dni;
   } catch (error) {
@@ -130,7 +73,7 @@ export const getDni = async () => {
 
 //////////// PORQUE ESTE FICHERO Y NO LLAMAR DIRECTAMENTE A authController.js desde el frontend?
 
-/* 
+/*
 Este fichero actúa como intermediario entre el frontend (Vue) y el backend (Express).
 
 1. Abstracción: Permite abstraer los detalles de la comunicación con el backend. Si la URL del backend cambia, solo hay que actualizarla aquí.

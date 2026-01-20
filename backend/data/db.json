@@ -335,25 +335,6 @@
       "password": "",
       "tipo": "user",
       "id": "c6d3"
-    },
-    {
-      "id": "346e",
-      "dni": "39499742W",
-      "nombre": "Carmen",
-      "apellidos": "García Alonso",
-      "email": "carmenga24teis@gmail.com",
-      "movil": "684146930",
-      "direccion": "Calle Rodríguez 19",
-      "provincia": "Pontevedra",
-      "municipio": "Vigo",
-      "fechaAlta": "",
-      "historico": true,
-      "lopd": true,
-      "tipoCliente": "",
-      "tipo": "admin",
-      "password": "abc123",
-      "password2": "abc123",
-      "fecha_alta": ""
     }
   ],
   "noticias": [

@@ -1,9 +1,8 @@
 <template>
   <nav class="navbar navbar-dark bg-primary sticky-top navbar-expand-lg">
-
     <div class="container-fluid">
       <!-- Marca o logo -->
-      <img src="../assets/logoEmpresaTeis.svg"></img>
+      <img src="../assets/logoEmpresaTeis.svg" width="50" height="50" />
       <a class="navbar-brand" href="#">EmpresaTeis</a>
 
       <!-- Botón de hamburguesa en pantallas pequeñas -->
@@ -51,18 +50,29 @@
           </ul>
         </div>
       </div>
+
+      <div class="d-flex ms-auto">
+        <input v-model="q" @keyup.enter="goSearch" class="form-control form-control-sm me-2" placeholder="Buscar..."
+          style="width:220px;">
+        <router-link class="btn btn-sm btn-light me-2" to="/ventas">Ventas</router-link>
+        <router-link class="btn btn-sm btn-light me-2" to="/cart">Cesta</router-link>
+        <router-link v-if="isAdmin" class="btn btn-sm btn-warning" to="/admin/clientes">Admin</router-link>
+      </div>
     </div>
   </nav>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { esAdmin } from '@/api/authApi.js'  // importamos la función que ya tenemos
+import { esAdmin, checkAdmin } from '@/api/authApi.js'  // importamos la función que ya tenemos
+import { useRouter } from 'vue-router'
 
 const isLogueado = ref(false)
 const isAdmin = ref(false)
 const isUsuario = ref(false)
 const userName = ref('')
+const q = ref('')
+const router = useRouter()
 
 // Se ejecuta al montar el componente
 onMounted(async () => {
@@ -81,6 +91,9 @@ onMounted(async () => {
     isUsuario.value = !isAdmin.value
     isLogueado.value = true
     userName.value = sessionStorage.getItem('userName') || ''
+
+    const r = await checkAdmin()
+    isAdmin.value = r.isAdmin
   } catch (err) {
     console.error('Error verificando si es admin', err)
     sessionStorage.clear()
@@ -100,7 +113,12 @@ function logout() {
   userName.value = ''
   window.location.href = '/'
 }
+
+function goSearch() {
+  if (q.value.trim()) router.push({ name: 'Buscar', query: { q: q.value } })
+}
 </script>
+
 <style>
 .navbar-dark .nav-link {
   color: rgba(255, 255, 255, 0.9);

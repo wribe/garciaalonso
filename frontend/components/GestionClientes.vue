@@ -29,10 +29,10 @@
         <!-- RadioButtons -->
         <div class="col-md-3 d-flex align-items-center me-5">
           <label for="tipoCliente" class="form-label me-4 ms-5 mb-0 text-nowrap">Tipo Cliente:</label>
-          <input type="radio" name="tipoCliente" id="tipoCliente" value="particular" class="me-1"
+          <input type="radio" name="tipoCliente" id="tipoClienteParticular" value="particular" class="me-1"
             v-model="nuevoCliente.tipoCliente" checked required />
           <label class="me-4">Particular</label>
-          <input type="radio" name="tipoCliente" id="tipoCliente" value="empresa" class="me-1"
+          <input type="radio" name="tipoCliente" id="tipoClienteEmpresa" value="empresa" class="me-1"
             v-model="nuevoCliente.tipoCliente" required />
           <label>Empresa</label>
         </div>
@@ -237,8 +237,8 @@ import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import provmuniData from "../../backend/data/provmuni.json";
 import Swal from "sweetalert2";
-import { getClientes, deleteCliente, addCliente, updateCliente, getClientePorDni } from "@/api/clientes.js";
-import { esAdmin as checkAdmin } from '@/api/authApi.js'
+import { getClientes, deleteCliente, addCliente, updateCliente, getClientePorDni, getDni } from "@/api/clientes.js";
+import {  checkAdmin } from '@/api/authApi.js'
 import bcrypt from "bcryptjs";
 
 const router = useRouter();
@@ -277,6 +277,7 @@ var currentPage = ref(1);
 var clientesPerPage = 10;
 
 const isAdmin = ref(false);
+const admin = ref(false)
 
 /// se carga en el onmounted ya que necesita llamar al back
 var dni;
@@ -294,17 +295,16 @@ const clientes = ref([]);
 
 // Zona Cargar clientes Al Montar el componente 
 onMounted(async () => {
-  // Verificar si es admin mediante API
   const adminCheck = await checkAdmin();
+  admin.value = adminCheck.isAdmin;
   isAdmin.value = adminCheck.isAdmin;
   dni = await getDni();
-
 
   if (isAdmin.value) {
     cargarClientes()
   }
 
-  if (dni) {
+  if (dni && dni !== 'undefined') {
     buscarClientePorDNI(dni)
   }
 })

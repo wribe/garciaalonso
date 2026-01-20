@@ -77,7 +77,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import Swal from 'sweetalert2'
 import {
     getNoticias,
@@ -85,7 +85,7 @@ import {
     updateNoticia,
     deleteNoticia
 } from '@/api/noticias'
-import { esAdmin } from "@/api/authApi.js";
+import { checkAdmin } from '@/api/authApi.js'
 const admin = localStorage.getItem("isAdmin") === "true";
 
 
@@ -95,6 +95,7 @@ const nuevoContenido = ref('')
 const noticias = ref([])
 const isExpanded = ref({})
 const noticiaEditando = ref(null)
+const isAdmin = ref(false)
 
 // 🔹 Cargar noticias al montar el componente
 onMounted(async () => {

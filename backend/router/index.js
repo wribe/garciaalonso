@@ -10,6 +10,10 @@ import CitasTaller from "../../frontend/components/CitasTaller.vue"
 import TablaLogin from "../../frontend/components/TablaLogin.vue"
 //import {esAdmin} from "@/api/authApi.js"
 import ContacTo from "../../frontend/components/ContacTo.vue"
+import Ventas from '../../frontend/components/VenTas.vue'
+import Buscar from '../../frontend/components/BusCar.vue'
+import Cart from '../../frontend/components/Cart.vue'
+import AdminClientes from '../../frontend/components/AdminClientes.vue'
 
 const routes = [
     {
@@ -61,7 +65,11 @@ const routes = [
         path: '/:pathMatch(.*)*',
         name: 'NotFound',
         component: NotFound
-    }
+    },
+    { path: '/ventas', name: 'Ventas', component: Ventas },
+    { path: '/buscar', name: 'Buscar', component: Buscar },
+    { path: '/cart', name: 'Cart', component: Cart },
+    { path: '/admin/clientes', name: 'AdminClientes', component: AdminClientes },
 ]
 
 const router = createRouter({

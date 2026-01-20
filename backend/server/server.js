@@ -1,92 +1,40 @@
-import express from "express";
-import cors from "cors";
-import mongoose from "mongoose";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
-
-// a diferencia de json-server, aquí necesita configurar las rutas y controladores manualmente
-// json-server crea automáticamente las rutas basadas en el archivo JSON, mongoose requiere definir esquemas y modelos
-// MONGOSEE NO SABE NADA DE RUTAS CONTROLADRES Y MODELOS, HAY QUE CREARLOS MANUALMENTE
-
-import articulosRoutes from "./articulosRoutes.js"; // ruta al router backend
-import authRoutes from "./authRoutes.js"; // ruta al router backend
-import contactoRoutes from "./contactoRoutes.js"; // ruta al router backend
-import chatRoutes from "./chatRoutes.js";
-import clientesRoutes from "./clientesRoutes.js";
-
-
+import dotenv from 'dotenv'
 dotenv.config()
 
-const app = express();
-const PORT = process.env.PORT || 5000;  // Use PORT from environment or default to 5000
+import express from 'express'
+import mongoose from 'mongoose'
+import cors from 'cors'
+import clientesRouter from './clientesRoutes.js'
+import modelosRouter from './modelosRoutes.js'
+import contactoRouter from './contactoRoutes.js'
+import authRouter from './authRoutes.js'
+import ventasRouter from './ventasRoutes.js'
+import checkoutRouter from './checkoutRoutes.js'
+import printRouter from './printRoutes.js'
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Middleware - Configuración de CORS mejorada para servicios externos
-app.use(cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Content-Range", "X-Content-Range"]
-}));
-
-app.use(express.json());
-
-// Rutas DE MONGOOSE, JSON SERVER NO ES NECESARIO LAS RUTAS LAS CREA AUTOMATICAMENTE
-// json-server es un backend ya construido.
-// Express es un backend que TÚ construyes.
-// Por eso json-server no requiere rutas y Express sí.
-app.use("/api/articulos", articulosRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/contacto", contactoRoutes);
-app.use("/api/chat", chatRoutes);
-app.use("/api/clientes", clientesRoutes);
-
-// Verificar variable
-//console.log("MONGODB_URI =", process.env.MONGODB_URI);
-
-/// Conexión a MongoDB 
-
-// Verificar variable
-//console.log("MONGODB_URI =", process.env.MONGODB_URI);
-
-/// Conexión a MongoDB (solo si se proporciona MONGODB_URI)
-if (process.env.MONGODB_URI) {
-    mongoose.connect(process.env.MONGODB_URI)
-        .then(() => console.log("Connected to MongoDB a la base de datos BBDD"))
-        .catch((err) => console.error("Could not connect to MongoDB:", err));
-} else {
-    console.log("MONGODB_URI no definido — saltando conexión a MongoDB (modo desarrollo)");
-}
-
-
-
-
-//Iniciar el servidor Express en el puerto especificado
-app.listen(PORT, () => {
-    console.log(`Server Express está corriendo en el puerto: ${PORT}`);
-});
-/*
-// Validar y obtener la URI de conexión
-const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI
+const MONGODB_URI = process.env.MONGODB_URI
 if (!MONGODB_URI) {
-    console.error('Falta MONGODB_URI en las variables de entorno. Define MONGODB_URI en .env o exportala antes de ejecutar el servidor.')
-    process.exit(1)
+    console.error('Falta MONGODB_URI en .env'); process.exit(1)
 }
 
-// Conectar a MongoDB (sin opciones obsoletas)
-mongoose.connect(MONGODB_URI)
-    .then(() => console.log('Conectado a MongoDB'))
-    .catch(err => {
-        console.error('Could not connect to MongoDB:', err)
-        process.exit(1)
-    })
+await mongoose.connect(MONGODB_URI)
+console.log('Conectado a MongoDB')
 
-//Iniciar el servidor Express en el puerto especificado
-app.listen(PORT, () => {
-    console.log(`Server Express está corriendo en el puerto: ${PORT}`);
-});*/
+const app = express()
+app.use(cors()); app.use(express.json())
+
+app.use('/api/auth', authRouter)
+app.use('/api/clientes', clientesRouter)
+app.use('/api/modelos', modelosRouter)
+app.use('/api/contacto', contactoRouter)
+app.use('/api/ventas', ventasRouter)
+app.use('/api/checkout', checkoutRouter)
+app.use('/api/print', printRouter)
+
+app.post('/api/chat', (req, res) => {
+    console.log('Chat message:', req.body)
+    res.json({ ok: true })
+})
+
+const PORT = process.env.PORT || 5000
+app.listen(PORT, () => console.log(`Server Express está corriendo en el puerto: ${PORT}`))

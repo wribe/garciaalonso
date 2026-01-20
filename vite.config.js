@@ -9,5 +9,10 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './frontend')
     }
+  },
+  server: {
+    proxy: {
+      '/api': 'http://localhost:5000' // o el puerto de tu backend
+    }
   }
 })
