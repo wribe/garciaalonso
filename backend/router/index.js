@@ -14,10 +14,6 @@ import Ventas from '../../frontend/components/VenTas.vue'
 import Buscar from '../../frontend/components/BusCar.vue'
 import Cart from '../../frontend/components/Cart.vue'
 import AdminClientes from '../../frontend/components/AdminClientes.vue'
-import express from 'express';
-
-
-const app = express();
 
 const routes = [
     {

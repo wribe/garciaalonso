@@ -4,24 +4,27 @@
         <div class="container py-4">
 
             <!-- Formulario de creación -->
-            <div v-if="admin" class="p-4 mb-4 border rounded bg-light shadow-sm">
+            <div v-if="isAdmin" class="p-4 mb-4 border rounded bg-light shadow-sm">
+                <h3 class="mb-3">{{ noticiaEditando ? 'Editar Noticia' : 'Nueva Noticia' }}</h3>
+                
                 <div class="mb-3">
                     <label for="titulo" class="form-label fw-bold fs-5">Título:</label>
-                    <input v-model="nuevoTitulo" type="text" class="form-control bg-body-secondary" id="titulo" />
+                    <input v-model="nuevoTitulo" type="text" class="form-control bg-body-secondary" id="titulo" 
+                            placeholder="Ingresa el título de la noticia" />
                 </div>
 
                 <div class="mb-3">
                     <label for="contenido" class="form-label fw-bold fs-5">Contenido:</label>
                     <textarea v-model="nuevoContenido" class="form-control bg-body-secondary" id="contenido"
-                        rows="4"></textarea>
-                    <small class="text-muted">
-                        Cuando veamos autenticación esta parte solo será visible al administrador
-                    </small>
+                        rows="6" placeholder="Escribe el contenido de la noticia..."></textarea>
                 </div>
 
                 <div class="text-center mt-3">
-                    <button @click="guardarNoticia" class="btn btn-primary fw-bold">
-                        GRABAR
+                    <button @click="guardarNoticia" class="btn btn-primary fw-bold me-2">
+                        <i class="bi bi-save"></i> {{ noticiaEditando ? 'ACTUALIZAR' : 'GRABAR' }}
+                    </button>
+                    <button v-if="noticiaEditando" @click="cancelarEdicion" class="btn btn-secondary fw-bold">
+                        <i class="bi bi-x-circle"></i> CANCELAR
                     </button>
                 </div>
             </div>
@@ -57,13 +60,13 @@
                         <!-- Fila 3: espacio y botones -->
                         <tr>
                             <td class="pt-2 pb-4">
-                                <div v-if="admin" class="d-flex justify-content-start">
+                                <div v-if="isAdmin" class="d-flex justify-content-start">
                                     <button class="btn btn-sm btn-outline-secondary me-2"
                                         @click="editarNoticia(noticia.id)">
-                                        <i class="bi bi-pencil"></i>
+                                        <i class="bi bi-pencil"></i> Editar
                                     </button>
                                     <button class="btn btn-sm btn-outline-danger" @click="eliminarNoticia(noticia.id)">
-                                        <i class="bi bi-trash"></i>
+                                        <i class="bi bi-trash"></i> Eliminar
                                     </button>
                                 </div>
                             </td>
@@ -86,8 +89,6 @@ import {
     deleteNoticia
 } from '@/api/noticias'
 import { checkAdmin } from '@/api/authApi.js'
-const admin = localStorage.getItem("isAdmin") === "true";
-
 
 // Estados reactivos
 const nuevoTitulo = ref('')
@@ -100,8 +101,13 @@ const isAdmin = ref(false)
 // 🔹 Cargar noticias al montar el componente
 onMounted(async () => {
     // Verificar si es admin mediante API
-    const adminCheck = await checkAdmin();
-    isAdmin.value = adminCheck.esAdmin;
+    try {
+        const adminCheck = await checkAdmin();
+        isAdmin.value = adminCheck.isAdmin;
+    } catch (error) {
+        console.error('Error verificando admin:', error);
+        isAdmin.value = false;
+    }
     await cargarNoticias()
 })
 
@@ -193,12 +199,23 @@ function editarNoticia(id) {
     nuevoContenido.value = noticia.contenido
     noticiaEditando.value = noticia
 
+    // Desplazar hacia arriba al formulario
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+
     Swal.fire({
         title: 'Modo edición',
         text: 'Ahora puedes modificar la noticia y volver a grabar.',
         icon: 'info',
-        confirmButtonText: 'Entendido'
+        confirmButtonText: 'Entendido',
+        timer: 2000
     })
+}
+
+// 🔹 Cancelar edición
+function cancelarEdicion() {
+    nuevoTitulo.value = ''
+    nuevoContenido.value = ''
+    noticiaEditando.value = null
 }
 
 // 🔹 Expandir/colapsar contenido
