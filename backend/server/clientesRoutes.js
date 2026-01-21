@@ -12,12 +12,18 @@ router.post('/registro', async (req, res) => {
     const exists = await Cliente.findOne({ $or: [{ dni: dni.toUpperCase() }, { email }, { movil }] })
     if (exists) return res.status(409).json({ error: 'DNI, email o móvil ya existe' })
 
-    const nuevo = new Cliente({
-      nombre, dni: dni.toUpperCase(), email, movil, direccion,
-      passwordHash: password
+    const nuevoCliente = new Cliente({
+      nombre: req.body.nombre,
+      dni: req.body.dni,
+      email: req.body.email,
+      movil: req.body.movil,
+      direccion: req.body.direccion,
+      passwordHash: req.body.password, // o como lo manejes
+      fecha_alta: new Date(), // <-- aquí se guarda la fecha de alta
+      // ...otros campos...
     })
-    await nuevo.save()
-    res.json({ success: true, data: { id: nuevo._id, nombre: nuevo.nombre } })
+    await nuevoCliente.save()
+    res.json({ success: true, data: { id: nuevoCliente._id, nombre: nuevoCliente.nombre } })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Error al registrar' })
@@ -81,23 +87,21 @@ router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
       filter.$or = [{ dni: q.toUpperCase() }, { movil: re }, { nombre: re }, { email: re }]
     }
     const total = await Cliente.countDocuments(filter)
-    const clients = await Cliente.find(filter).skip((page - 1) * limit).limit(parseInt(limit)).select('-passwordHash')
+    const clients = await Cliente.find(filter)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .select('-passwordHash') // fecha_alta sí se envía
     res.json({ total, page: Number(page), limit: Number(limit), data: clients })
   } catch (err) { res.status(500).json({ error: 'Error' }) }
 })
 
-router.get('/usuario', async (req, res) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ message: 'No token' });
-
-    const token = authHeader.split(' ')[1];
+router.get('/usuario', authMiddleware, async (req, res) => {
     try {
-        const payload = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await Cliente.findOne({ dni: payload.dni });
-        if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
-        res.json(user);
+        const cliente = await Cliente.findOne({ dni: req.user.dni });
+        if (!cliente) return res.status(404).json({ message: 'Cliente no encontrado' });
+        res.json(cliente);
     } catch (error) {
-        res.status(401).json({ message: 'Token inválido' });
+        res.status(500).json({ message: 'Error al obtener cliente' });
     }
 })
 

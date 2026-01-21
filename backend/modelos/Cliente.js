@@ -10,6 +10,7 @@ const clienteSchema = new mongoose.Schema({
     passwordHash: { type: String, required: true },
     rol: { type: String, enum: ['user', 'admin'], default: 'user' },
     activo: { type: Boolean, default: true },
+    fecha_alta: { type: Date, required: true },
     createdAt: { type: Date, default: Date.now }
 })
 

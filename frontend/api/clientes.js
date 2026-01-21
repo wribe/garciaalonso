@@ -55,10 +55,8 @@ export const getClientePorDni = async (dni) => {
 
 // Nueva función sugerida: obtener cliente por DNI desde otra API
 export async function getDni() {
-    // Por ejemplo, si el token está en sessionStorage
     const token = sessionStorage.getItem('token');
     if (!token) return undefined;
-    // Llama a tu backend para obtener el usuario actual
     const res = await axios.get('/api/clientes/usuario', {
         headers: { Authorization: `Bearer ${token}` }
     });
@@ -77,10 +75,10 @@ export async function getClienteLogueado() {
     if (!token) return null;
 
     try {
-        // Llama a tu API para obtener el cliente por su DNI
         const response = await axios.get('/api/clientes/usuario', {
             headers: { Authorization: `Bearer ${token}` }
         });
+        console.log('Respuesta backend usuario:', response.data); // <-- Añade esto
         return response.data;
     } catch (error) {
         console.error('Error obteniendo cliente logueado:', error);

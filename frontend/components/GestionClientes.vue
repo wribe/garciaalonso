@@ -127,7 +127,7 @@
             id="password"
             v-model="nuevoCliente.password"
             class="form-control flex-grow-1"
-            required
+            :required="!editando"
             autocomplete="new-password"
           />
         </div>
@@ -138,7 +138,7 @@
             id="repetirPassword"
             v-model="repetirPassword"
             class="form-control flex-grow-1"
-            required
+            :required="!editando"
             autocomplete="new-password"
           />
         </div>
@@ -284,7 +284,7 @@ import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import provmuniData from "../../backend/data/provmuni.json";
 import Swal from "sweetalert2";
-import { getClientes, deleteCliente, addCliente, updateCliente, getClientePorDni, getDni } from "@/api/clientes.js";
+import { getClientes, deleteCliente, addCliente, updateCliente, getClientePorDni, getDni, getClienteLogueado } from "@/api/clientes.js";
 import { registerUsuario, loginUsuario, checkAdmin } from "@/api/authApi.js";
 import bcrypt from "bcryptjs";
 
@@ -343,16 +343,21 @@ onMounted(async () => {
   const adminCheck = await checkAdmin();
   admin.value = adminCheck.isAdmin;
   isAdmin.value = adminCheck.isAdmin;
-  dni = await getDni();
 
   if (isAdmin.value) {
-    cargarClientes()
+    cargarClientes();
   }
 
-  if (dni && dni !== 'undefined') {
-    buscarClientePorDNI(dni)
+  // SI NO ESTÁS EDITANDO, CARGA TUS DATOS EN EL FORMULARIO
+  if (!editando.value) {
+    const cliente = await getClienteLogueado();
+    console.log('Datos de mi perfil:', cliente);
+    if (cliente) {
+      nuevoCliente.value = { ...cliente, password: "" };
+      nuevoCliente.value.fecha_alta = formatearFechaParaInput(cliente.fecha_alta);
+    }
   }
-})
+});
 
 const updateTabla = () => {
   getClientes(mostrarHistorico.value).then(data => {
@@ -413,11 +418,7 @@ const guardarCliente = async () => {
     return;
   }
 
-  const salt = bcrypt.genSaltSync(10)
-  const hash = bcrypt.hashSync(nuevoCliente.value.password, salt)
-
   // Validar duplicados solo si estás creando (no si editando)
-
   if (!editando.value) {
     const duplicado = clientes.value.find(cliente =>
       cliente.dni === nuevoCliente.value.dni ||
@@ -445,22 +446,19 @@ const guardarCliente = async () => {
   });
 
   if (!result.isConfirmed) return;
-  //  cliente.fecha_alta = formatearFechaParaInput(cliente.fecha_alta);
+
   try {
-    console.log('Datos a guardar:', { ...nuevoCliente.value, password: '***' });
-
     if (editando.value) {
-      // Validar campos
-      // Modificar cliente (PUT)
+      // MODIFICAR CLIENTE EXISTENTE
+      const datosActualizados = { ...nuevoCliente.value };
+      if (nuevoCliente.value.password) {
+        const salt = bcrypt.genSaltSync(10);
+        datosActualizados.password = bcrypt.hashSync(nuevoCliente.value.password, salt);
+      } else {
+        delete datosActualizados.password;
+      }
+      await updateCliente(clienteEditandoId.value, datosActualizados); // <-- MODIFICA EL EXISTENTE
 
-      const clienteActualizado = await updateCliente(clienteEditandoId.value, {
-        ...nuevoCliente.value,
-        password: hash
-      });
-
-      // Actualiza el cliente en la lista local
-      const index = clientes.value.findIndex(c => c.id === clienteEditandoId.value);
-      if (index !== -1) clientes.value[index] = clienteActualizado;
       Swal.fire({
         icon: 'success',
         title: 'Cliente modificado',
@@ -468,21 +466,21 @@ const guardarCliente = async () => {
         timer: 1500
       });
     } else {
-      // 1. Registrar usuario en MongoDB
+      // CREAR NUEVO CLIENTE
       await registerUsuario({
         dni: nuevoCliente.value.dni,
-        password: nuevoCliente.value.password, // <-- aquí envías la contraseña
+        password: nuevoCliente.value.password,
         nombre: nuevoCliente.value.nombre,
+        apellidos: nuevoCliente.value.apellidos,
         email: nuevoCliente.value.email,
         movil: nuevoCliente.value.movil,
-        direccion: nuevoCliente.value.direccion
+        direccion: nuevoCliente.value.direccion,
+        provincia: nuevoCliente.value.provincia,
+        municipio: nuevoCliente.value.municipio,
+        fecha_alta: nuevoCliente.value.fecha_alta,
+        tipo_cliente: nuevoCliente.value.tipoCliente,
+        lopd: nuevoCliente.value.lopd
       });
-
-      // 2. Login automático tras registrar
-      const data = await loginUsuario(nuevoCliente.value.dni, nuevoCliente.value.password);
-      sessionStorage.setItem('token', data.token);
-      sessionStorage.setItem('userName', data.nombre);
-      router.push({ name: 'Inicio' }).then(() => window.location.reload());
 
       Swal.fire({
         icon: 'success',
@@ -496,19 +494,13 @@ const guardarCliente = async () => {
     nuevoCliente.value = { ...clienteVacio };
     editando.value = false;
     clienteEditandoId.value = null;
-    repetirPassword.value = ""
+    repetirPassword.value = "";
 
-    // Reset validaciones si tienes (dniValido, movilValido, etc)
-    dniValido.value = true;
-    movilValido.value = true;
-    emailValido.value = true;
-
-    // Refrescar lista completa (opcional)
+    // Refrescar lista completa
     updateTabla();
 
   } catch (error) {
     console.error('Error al guardar cliente:', error);
-    alert(error?.response?.data?.message || error.message || 'Error desconocido');
     Swal.fire({
       icon: 'error',
       title: 'Error al guardar cliente',
@@ -552,7 +544,7 @@ const eliminarCliente = async (movil) => {
   // Si confirma, eliminar cliente usando la API y movil como ID
   await deleteCliente(clienteAEliminar.id);
   // Refrescar la lista desde la "API"
-  clientes.value = cargarClientes();
+  cargarClientes(); // <-- Solo llama a la función, no asignes el resultado
 
   Swal.fire({
     icon: 'success',
@@ -566,31 +558,13 @@ const eliminarCliente = async (movil) => {
 // Función Editar Cliente (carga datos en el formulario)
 const editarCliente = (movil) => {
   const cliente = clientes.value.find((c) => c.movil === movil);
-  if (!cliente) {
-    Swal.fire({
-      icon: "error",
-      title: "Cliente no encontrado",
-      showConfirmButton: false,
-      timer: 1500,
-    });
-    return;
-  }
-
-  // Copiar datos al formulario
-  nuevoCliente.value = { ...cliente, password: "" }; // 🔁 Aquí cargas el formulario con los datos
+  nuevoCliente.value = { ...cliente, password: "" };
   editando.value = true;
-  // Formatear fecha para el input type="date"
+  clienteEditandoId.value = cliente.id; // <-- ESTA LÍNEA ES CLAVE
   nuevoCliente.value.fecha_alta = formatearFechaParaInput(cliente.fecha_alta);
-  // Actualiza municipios filtrados según la provincia seleccionada
-  filtrarMunicipios();
-  nuevoCliente.value.municipio = cliente.municipio; // 🟢 Ahora estamos en modo edición
-  clienteEditandoId.value = cliente.id;
-  if (nuevoCliente.value.tipo_cliente === undefined) {
-    nuevoCliente.value.tipo_cliente = "particular"
-  }
-};
+}
 
-// Función para activar cliente (poner historico en true)
+
 const activarCliente = async (cliente) => {
   const confirmacion = await Swal.fire({
     title: `¿Activar cliente ${cliente.nombre} ${cliente.apellidos}?`,
@@ -651,6 +625,7 @@ const buscarClientePorDNI = async (dni) => {
 
   try {
     const cliente = await getClientePorDni(dni.trim().toUpperCase());
+    console.log('Datos de mi perfil:', cliente); // <-- Añade esto
 
     if (!cliente) {
       Swal.fire({
@@ -819,7 +794,12 @@ function formatearFechaParaInput(fecha) {
   // Detecta formato yyyy-mm-dd
   if (fecha.includes('-')) {
     const partes = fecha.split('-');
-    if (partes.length === 3) return fecha; // ya formato ISO
+    if (partes.length === 3) return fecha.slice(0, 10); // solo yyyy-mm-dd
+  }
+
+  // Detecta formato ISO (ejemplo: 2026-01-21T00:00:00.000Z)
+  if (fecha.length >= 10 && fecha[4] === '-' && fecha[7] === '-') {
+    return fecha.slice(0, 10);
   }
 
   return '';
