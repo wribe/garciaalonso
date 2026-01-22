@@ -1,6 +1,7 @@
 import express from 'express'
 import Modelo from '../modelos/Modelo.js'
 import ModeloVenta from '../modelos/ModeloVenta.js'
+import Articulo from '../modelos/Articulo.js'
 const router = express.Router()
 
 // Alta
@@ -51,15 +52,26 @@ router.delete('/:id', async (req, res) => {
     } catch (err) { res.status(500).json({ error: 'Error' }) }
 })
 
-// Buscar por matrícula (capitaliza en servidor)
+// Buscar por matrícula (busca en Articulo que es donde están los vehículos)
 router.get('/buscar', async (req, res) => {
     try {
         const { matricula } = req.query
         if (!matricula) return res.status(400).json({ error: 'Falta matrícula' })
-        const m = await Modelo.findOne({ matricula: matricula.toUpperCase() })
-        if (!m) return res.status(404).json({ error: 'No encontrado' })
-        res.json(m)
-    } catch (err) { res.status(500).json({ error: 'Error' }) }
+        
+        // Buscar en Articulo (donde están los vehículos)
+        const vehiculo = await Articulo.findOne({ 
+            matricula: { $regex: new RegExp(matricula, 'i') } 
+        })
+        
+        if (!vehiculo) {
+            return res.status(404).json({ error: 'No encontrado', mensaje: 'Vehículo no encontrado con esa matrícula' })
+        }
+        
+        res.json(vehiculo)
+    } catch (err) { 
+        console.error('Error en búsqueda:', err)
+        res.status(500).json({ error: 'Error en el servidor' }) 
+    }
 })
 
 export default router

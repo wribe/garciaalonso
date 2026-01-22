@@ -18,10 +18,11 @@
                         style="min-width: 100px;">Matricula:
                     </label>
                     <input type="text" id="matricula" v-model="nuevaCita.matricula" @blur="validarMatricula"
-                        class="form-control w-auto" :class="{ 'is-invalid': !matriculaValida }" required />
+                        class="form-control w-auto" :class="{ 'is-invalid': !matriculaValida }" 
+                        placeholder="1234ABC" required />
 
                     <div v-if="!matriculaValida" class="ms-1 d-flex invalid-feedback">
-                        Matricula inválida.
+                        Formato: 1234ABC o M1234BC
                     </div>
                 </div>
 
@@ -121,20 +122,20 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(cita, index) in citasPaginados" :key="index">
-                        <th scope="row" class="text-center">{{ cita.id }}</th>
-                        <td class="text-center">{{ cita.fecha_cita }}</td>
+                    <tr v-for="(cita, index) in citasPaginados" :key="cita._id || index">
+                        <th scope="row" class="text-center">{{ index + 1 }}</th>
+                        <td class="text-center">{{ formatearFecha(cita.fecha_cita) }}</td>
                         <td class="text-center">{{ cita.matricula }}</td>
                         <td class="text-center">{{ cita.movil_cliente }}</td>
                         <td class="text-center">{{ cita.servicio_taller }}</td>
                         <td class="text-center">{{ cita.estado_cita }}</td>
                         <td class="text-center w-10">
-                            <button @click="eliminarCita(cita.movil_cliente)"
+                            <button @click="eliminarCita(cita._id)"
                             class="btn btn-danger btn-sm me-2 border-0 shadow-none rounded-0" title="Eliminar cita"
                             aria-label="Eliminar cita">
                             <i class="bi bi-trash"></i>
                         </button>
-                        <button @click="editarCita(cita.movil_cliente)"
+                        <button @click="editarCita(cita._id)"
                             class="btn btn-warning btn-sm border-0 dow-none rounded-0" title="Editar cita"
                             aria-label="Editar cita">
                             <i class="bi bi-pencil"></i>
@@ -247,6 +248,15 @@ const totalPages = computed(() => {
     return Math.ceil(numCitas.value / citasPerPage)
 })
 
+// Función para formatear fecha
+const formatearFecha = (fecha) => {
+    if (!fecha) return '';
+    const date = new Date(fecha);
+    const dia = String(date.getDate()).padStart(2, '0');
+    const mes = String(date.getMonth() + 1).padStart(2, '0');
+    const anio = date.getFullYear();
+    return `${dia}/${mes}/${anio}`;
+}
 
 const guardarCita = async () => {
     // Validar matrícula antes de guardar
@@ -254,7 +264,7 @@ const guardarCita = async () => {
         Swal.fire({
             icon: 'error',
             title: 'Matrícula inválida',
-            text: 'La matrícula debe tener 10 caracteres.',
+            text: 'Formato correcto: 1234ABC (nuevo) o M1234BC (antiguo)',
             showConfirmButton: true
         });
         return;
@@ -313,7 +323,7 @@ const guardarCita = async () => {
             // Validar campos
 
             const citaActualizada = await updateCita(citaEditandoId.value, nuevaCita.value);
-            const index = citas.value.findIndex(c => c.id === citaEditandoId.value);
+            const index = citas.value.findIndex(c => c._id === citaEditandoId.value);
             if (index !== -1) citas.value[index] = citaActualizada;
             Swal.fire({
                 icon: 'success',
@@ -363,12 +373,9 @@ const guardarCita = async () => {
     }
 };
 
-// Funcion Eliminar Cliente con patch (histórico a false)
-const eliminarCita = async (movil) => {
-    // Refrescar lista desde la API
-    cargarCitas();
-    // Buscar cliente completo (que incluye el ID)
-    const citaAEliminar = citas.value.find(cita => cita.movil_cliente === movil);
+// Función Eliminar Cliente con Confirmación
+const eliminarCita = async (id) => {
+    const citaAEliminar = citas.value.find(cita => cita._id === id);
 
     if (!citaAEliminar) {
         Swal.fire({
@@ -382,36 +389,47 @@ const eliminarCita = async (movil) => {
 
     // Pedir confirmación antes de eliminar
     const result = await Swal.fire({
-        title: `¿Eliminar la cita de ${citaAEliminar.matricula} con numero ${citaAEliminar.movil_cliente}?`,
+        title: `¿Eliminar la cita de ${citaAEliminar.matricula} con número ${citaAEliminar.movil_cliente}?`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Sí, eliminar',
         cancelButtonText: 'Cancelar'
     });
 
-
     // Si no confirma, salir
     if (!result.isConfirmed) return;
 
-    // Si confirma, eliminar cliente usando la API y movil como ID
-    await deleteCita(citaAEliminar.id);
-    // Refrescar la lista desde la "API"
-    citas.value = cargarCitas();
+    try {
+        // Eliminar usando el _id de MongoDB
+        await deleteCita(citaAEliminar._id);
+        
+        // Refrescar la lista
+        updateTabla();
 
-    Swal.fire({
-        icon: 'success',
-        title: 'Cita eliminada',
-        showConfirmButton: false,
-        timer: 1500
-    });
+        Swal.fire({
+            icon: 'success',
+            title: 'Cita eliminada',
+            showConfirmButton: false,
+            timer: 1500
+        });
 
-    vaciarFormulario()
+        vaciarFormulario();
+    } catch (error) {
+        console.error('Error al eliminar cita:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al eliminar',
+            showConfirmButton: false,
+            timer: 1500
+        });
+    }
 };
 
 
 // Función Editar Cliente (carga datos en el formulario)
-const editarCita = (movil) => {
-    const cita = citas.value.find((c) => c.movil_cliente === movil);
+// Función Editar Cliente (carga datos en el formulario)
+const editarCita = (id) => {
+    const cita = citas.value.find((c) => c._id === id);
     if (!cita) {
         Swal.fire({
             icon: "error",
@@ -429,7 +447,7 @@ const editarCita = (movil) => {
     // Formatear fecha para el input type="date"
     nuevaCita.value.fecha_cita = formatearFechaParaInput(cita.fecha_cita);
 
-    citaEditandoId.value = cita.id;
+    citaEditandoId.value = cita._id; // Usar _id de MongoDB
     if (nuevaCita.value.tipo_cliente === undefined) {
         nuevaCita.value.tipo_cliente = "pendiente"
     }
@@ -466,8 +484,15 @@ const matriculaValida = ref(true);
 // Validar al salir del campo
 const validarMatricula = () => {
     const matricula = nuevaCita.value.matricula.trim().toUpperCase();
-    matriculaValida.value = matricula.length === 10;
-    nuevaCita.value.matricula = matricula.toUpperCase();
+    
+    // Formato nuevo español: 4 números + 3 letras (ej: 3933KWY)
+    const formatoNuevo = /^[0-9]{4}[BCDFGHJKLMNPRSTVWXYZ]{3}$/;
+    
+    // Formato antiguo español: 1-2 letras + 4 números + 1-2 letras (ej: M1234BC, AB1234C)
+    const formatoAntiguo = /^[A-Z]{1,2}[0-9]{4}[A-Z]{1,2}$/;
+    
+    matriculaValida.value = formatoNuevo.test(matricula) || formatoAntiguo.test(matricula);
+    nuevaCita.value.matricula = matricula;
 };
 
 // Validar móvil
@@ -495,16 +520,25 @@ const validarMovil = () => {
 function formatearFechaParaInput(fecha) {
     if (!fecha) return '';
 
+    // Si es una fecha ISO completa (con T y hora)
+    if (typeof fecha === 'string' && fecha.includes('T')) {
+        return fecha.split('T')[0]; // Retorna solo la parte yyyy-MM-dd
+    }
+
     // Detecta formato dd/mm/yyyy
-    if (fecha.includes('/')) {
+    if (typeof fecha === 'string' && fecha.includes('/')) {
         const [dd, mm, yyyy] = fecha.split('/');
         return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
     }
 
-    // Detecta formato yyyy-mm-dd
-    if (fecha.includes('-')) {
-        const partes = fecha.split('-');
-        if (partes.length === 3) return fecha; // ya formato ISO
+    // Si es un objeto Date
+    if (fecha instanceof Date) {
+        return fecha.toISOString().split('T')[0];
+    }
+
+    // Detecta formato yyyy-mm-dd (ya está en el formato correcto)
+    if (typeof fecha === 'string' && fecha.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return fecha;
     }
 
     return '';

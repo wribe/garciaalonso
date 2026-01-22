@@ -295,7 +295,10 @@ onMounted(async () => {
 
 const cargarVehiculos = async () => {
   try {
-    vehiculos.value = await getArticulos();
+    const data = await getArticulos();
+    // Forzar reactividad creando un nuevo array
+    vehiculos.value = [...data];
+    console.log('🔄 Vehículos recargados:', vehiculos.value.length);
   } catch (error) {
     console.error("Error al cargar vehículos:", error);
   }
@@ -509,6 +512,9 @@ const guardarVehiculo = async () => {
       const actualizado = await updateArticulo(vehiculoEditandoId.value, formData);
 
       if (actualizado && actualizado._id) {
+        // Recargar lista ANTES de mostrar el mensaje
+        await cargarVehiculos();
+        
         Swal.fire({
           icon: "success",
           title: "Vehículo modificado",
@@ -524,6 +530,9 @@ const guardarVehiculo = async () => {
       const nuevo = await addArticulo(formData);
 
       if (nuevo && nuevo._id) {
+        // Recargar lista ANTES de mostrar el mensaje
+        await cargarVehiculos();
+        
         Swal.fire({
           icon: "success",
           title: "Vehículo guardado",
@@ -536,9 +545,10 @@ const guardarVehiculo = async () => {
       }
     }
 
-    // Recargar lista
-    await cargarVehiculos();
+    // Ya no necesitamos recargar aquí porque ya se recargó arriba
+    // await cargarVehiculos();
 
+    // Limpiar formulario
     Object.assign(vehiculo.value, {
       tipo: "",
       matricula: "",
@@ -627,6 +637,13 @@ const limpiarFormulario = () => {
 // Editar vehículo
 const editarVehiculo = (vehiculoData) => {
   vehiculo.value = { ...vehiculoData };
+  
+  // Convertir fecha ISO a formato yyyy-MM-dd para el input type="date"
+  if (vehiculo.value.fecha_publicacion) {
+    const fecha = new Date(vehiculo.value.fecha_publicacion);
+    vehiculo.value.fecha_publicacion = fecha.toISOString().split('T')[0];
+  }
+  
   editando.value = true;
   vehiculoEditandoId.value = vehiculoData._id;
 

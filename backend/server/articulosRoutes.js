@@ -73,7 +73,94 @@ router.post("/", upload.single('imagen'), async (req, res) => {
     }
 });
 
+// Obtener artículo por ID
+router.get("/:id", async (req, res) => {
+    try {
+        const articulo = await Articulo.findById(req.params.id);
+        if (!articulo) {
+            return res.status(404).json({ error: "Artículo no encontrado" });
+        }
+        res.json(articulo);
+    } catch (err) {
+        console.error("Error obteniendo artículo:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
-// otras rutas PUT, DELETE, GET /:id igual
+// Actualizar artículo
+router.put("/:id", upload.single('imagen'), async (req, res) => {
+    try {
+        console.log('📝 PUT /api/articulos/:id recibido');
+        console.log('ID:', req.params.id);
+        console.log('Body:', req.body);
+        console.log('File:', req.file);
+        
+        let datos;
+        
+        // Si viene como FormData con campo 'vehiculo'
+        if (req.body.vehiculo) {
+            try {
+                datos = JSON.parse(req.body.vehiculo);
+                console.log('✅ Datos parseados desde vehiculo:', datos);
+            } catch (e) {
+                console.error("Error parseando JSON:", e.message);
+                return res.status(400).json({ error: "JSON inválido en 'vehiculo'", detalle: e.message });
+            }
+        } else {
+            // Si viene como JSON directo
+            datos = req.body;
+            console.log('✅ Datos directos desde body:', datos);
+        }
+
+        // Si hay nueva imagen, actualizar la ruta
+        if (req.file) {
+            datos.imagen = `/uploads/${req.file.filename}`;
+            console.log('🖼️ Nueva imagen:', datos.imagen);
+        }
+
+        console.log('🔄 Actualizando artículo con datos:', datos);
+
+        const articuloActualizado = await Articulo.findByIdAndUpdate(
+            req.params.id,
+            datos,
+            { new: true, runValidators: true }
+        );
+
+        if (!articuloActualizado) {
+            console.error('❌ Artículo no encontrado con ID:', req.params.id);
+            return res.status(404).json({ error: "Artículo no encontrado" });
+        }
+
+        console.log('✅ Artículo actualizado correctamente:', articuloActualizado._id);
+        res.json(articuloActualizado);
+    } catch (err) {
+        console.error("Error actualizando artículo:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Eliminar artículo
+router.delete("/:id", async (req, res) => {
+    try {
+        const articuloEliminado = await Articulo.findByIdAndDelete(req.params.id);
+        
+        if (!articuloEliminado) {
+            return res.status(404).json({ error: "Artículo no encontrado" });
+        }
+
+        // Opcionalmente, eliminar la imagen del servidor
+        if (articuloEliminado.imagen) {
+            const imagePath = path.join(__dirname, articuloEliminado.imagen);
+            if (fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
+            }
+        }
+
+        res.json({ mensaje: "Artículo eliminado correctamente", articulo: articuloEliminado });
+    } catch (err) {
+        console.error("Error eliminando artículo:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 export default router;

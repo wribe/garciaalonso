@@ -1,25 +1,10 @@
-// models/Articulo.js
-
-import mongoose from 'mongoose';
-
-const articuloSchema = new mongoose.Schema({
-    titulo: { type: String, required: false },
-    descripcion: { type: String, required: false },
-    precio: { type: Number, required: false },
-    imagen: { type: String, required: false },
-    createdAt: { type: Date, default: Date.now }
-});
-
-const Articulo = mongoose.models.Articulo || mongoose.model('Articulo', articuloSchema);
-export default Articulo;
 // backend/modelos/Articulo.js
-/*
 import mongoose from "mongoose";
 
 const ArticuloSchema = new mongoose.Schema(
     {
         tipo: { type: String, required: true },
-        matricula: { type: String, required: true },
+        matricula: { type: String, required: false },
         marca: { type: String, required: true },
         modelo: { type: String, required: true },
         anio: { type: Number, required: true },
@@ -49,16 +34,16 @@ const ArticuloSchema = new mongoose.Schema(
             type: Date,
             default: Date.now
         },
-        // NUEVO CAMPO PARA GUARDAR LA IMAGEN 
+        // Campo para guardar la imagen 
         imagen: {
             type: String,
             required: false
         }
     },
-    // Nombre de la colección en la base de datos
     {
+        timestamps: true, // Agrega createdAt y updatedAt automáticamente
         collection: "articulos"
     }
 );
 
-export default mongoose.model("Articulo", ArticuloSchema);*/
+export default mongoose.model("Articulo", ArticuloSchema);
