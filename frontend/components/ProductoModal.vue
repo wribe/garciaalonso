@@ -55,6 +55,28 @@
                                     <span>{{ formatKm(item.kilometros) }}</span>
                                 </div>
 
+                                <div class="info-item">
+                                    <i class="bi bi-box-seam text-muted"></i>
+                                    <strong>Stock:</strong>
+                                    <span :class="item.stock > 0 ? 'text-success' : 'text-danger'">
+                                        {{ item.stock > 0 ? `${item.stock} ${item.stock === 1 ? 'unidad' : 'unidades'}` : 'Sin stock' }}
+                                    </span>
+                                </div>
+
+                                <div class="info-item">
+                                    <i class="bi bi-flag text-muted"></i>
+                                    <strong>Estado:</strong>
+                                    <span 
+                                        :class="{
+                                            'text-success': item.stock > 2,
+                                            'text-warning': item.stock > 0 && item.stock <= 2,
+                                            'text-danger': !item.stock || item.stock === 0
+                                        }"
+                                    >
+                                        {{ getEstadoTexto(item) }}
+                                    </span>
+                                </div>
+
                                 <div v-if="item.combustible" class="info-item">
                                     <i class="bi bi-fuel-pump text-muted"></i>
                                     <strong>Combustible:</strong>
@@ -129,8 +151,14 @@
                     <button type="button" class="btn btn-secondary" @click="$emit('close')">
                         <i class="bi bi-x-circle"></i> Cerrar
                     </button>
-                    <button type="button" class="btn btn-success" @click="add">
-                        <i class="bi bi-cart-plus"></i> Añadir a la cesta
+                    <button 
+                        type="button" 
+                        class="btn btn-success" 
+                        @click="add"
+                        :disabled="!item.stock || item.stock === 0"
+                    >
+                        <i class="bi bi-cart-plus"></i> 
+                        {{ item.stock && item.stock > 0 ? 'Añadir a la cesta' : 'Sin stock' }}
                     </button>
                 </div>
             </div>
@@ -157,6 +185,16 @@ function formatPrecio(precio) {
 function formatKm(km) {
     if (!km) return '0 km'
     return new Intl.NumberFormat('es-ES').format(km) + ' km'
+}
+
+function getEstadoTexto(item) {
+    if (!item.stock || item.stock === 0) {
+        return 'VENDIDO'
+    } else if (item.stock <= 2) {
+        return 'A PEDIDO'
+    } else {
+        return 'DISPONIBLE'
+    }
 }
 </script>
 

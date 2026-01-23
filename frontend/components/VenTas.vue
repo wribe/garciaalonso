@@ -61,11 +61,14 @@
                             @click="abrirModal(item)"
                             @error="e => e.target.src = '/placeholder-car.png'"
                         >
-                        <span class="badge bg-success position-absolute top-0 end-0 m-2">
-                            {{ item.estado || 'Disponible' }}
-                        </span>
                         <span v-if="item.tipo" class="badge bg-primary position-absolute top-0 start-0 m-2">
                             {{ item.tipo }}
+                        </span>
+                        <span 
+                            :class="getEstadoBadgeClass(item)"
+                            class="badge position-absolute top-0 end-0 m-2"
+                        >
+                            {{ getEstadoTexto(item) }}
                         </span>
                     </div>
                     
@@ -95,16 +98,25 @@
                         </div>
 
                         <div class="mt-auto">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h4 class="text-success mb-0">{{ formatPrecio(item.precio) }}</h4>
+                            </div>
+                            
+                            <div v-if="item.stock > 0" class="text-muted small mb-2">
+                                <i class="bi bi-box-seam"></i> Stock: {{ item.stock }} {{ item.stock === 1 ? 'unidad' : 'unidades' }}
                             </div>
                             
                             <div class="d-grid gap-2">
                                 <button class="btn btn-outline-primary" @click="abrirModal(item)">
                                     <i class="bi bi-eye"></i> Ver detalles
                                 </button>
-                                <button class="btn btn-success" @click="agregarCarrito(item)">
-                                    <i class="bi bi-cart-plus"></i> Añadir a la cesta
+                                <button 
+                                    class="btn btn-success" 
+                                    @click="agregarCarrito(item)"
+                                    :disabled="!item.stock || item.stock === 0"
+                                >
+                                    <i class="bi bi-cart-plus"></i> 
+                                    {{ item.stock && item.stock > 0 ? 'Añadir a la cesta' : 'Sin stock' }}
                                 </button>
                             </div>
                         </div>
@@ -124,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 import ProductoModal from './ProductoModal.vue'
@@ -204,42 +216,75 @@ function abrirModal(item) {
 
 // Agregar al carrito
 function agregarCarrito(item) {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]')
-    
-    // Verificar si ya está en el carrito
-    const existe = cart.find(c => c.id === item._id)
-    if (existe) {
+    // Verificar stock disponible
+    if (!item.stock || item.stock === 0) {
         Swal.fire({
-            icon: 'info',
-            title: 'Ya en la cesta',
-            text: 'Este vehículo ya está en tu cesta',
+            icon: 'error',
+            title: 'Sin stock',
+            text: 'Este vehículo no está disponible actualmente',
             timer: 2000
         })
         return
     }
 
-    cart.push({
-        id: item._id,
-        matricula: item.matricula,
-        marca: item.marca,
-        modelo: item.modelo,
-        anio: item.anio,
-        kilometros: item.kilometros,
-        precio: item.precio,
-        imagen: item.imagen,
-        tipo: item.tipo
-    })
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+    
+    // Verificar si ya está en el carrito
+    const existente = cart.find(c => c.id === item._id)
+    
+    // Calcular cantidad total que se tendría en el carrito
+    const cantidadEnCarrito = existente ? existente.cantidad : 0
+    
+    if (cantidadEnCarrito >= item.stock) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Stock insuficiente',
+            text: `Solo hay ${item.stock} ${item.stock === 1 ? 'unidad disponible' : 'unidades disponibles'} de este vehículo`,
+            timer: 2500
+        })
+        return
+    }
+    
+    if (existente) {
+        // Si ya existe, incrementar la cantidad
+        existente.cantidad++
+        Swal.fire({
+            icon: 'success',
+            title: '¡Cantidad actualizada!',
+            text: `Ahora tienes ${existente.cantidad} unidades de ${item.marca} ${item.modelo}`,
+            timer: 2000,
+            showConfirmButton: false
+        })
+    } else {
+        // Si no existe, agregarlo con cantidad 1
+        cart.push({
+            id: item._id,
+            matricula: item.matricula,
+            marca: item.marca,
+            modelo: item.modelo,
+            anio: item.anio,
+            kilometros: item.kilometros,
+            precio: item.precio,
+            imagen: item.imagen,
+            tipo: item.tipo,
+            cantidad: 1,
+            stockDisponible: item.stock // Guardar el stock disponible
+        })
+        
+        Swal.fire({
+            icon: 'success',
+            title: '¡Añadido!',
+            text: `${item.marca} ${item.modelo} añadido a la cesta`,
+            timer: 2000,
+            showConfirmButton: false
+        })
+    }
     
     localStorage.setItem('cart', JSON.stringify(cart))
     actualizarContadorCarrito()
     
-    Swal.fire({
-        icon: 'success',
-        title: '¡Añadido!',
-        text: `${item.marca} ${item.modelo} añadido a la cesta`,
-        timer: 2000,
-        showConfirmButton: false
-    })
+    // Disparar evento para actualizar el contador en NavBar
+    window.dispatchEvent(new Event('cartUpdated'))
 
     // Cerrar modal si está abierto
     if (modalItem.value) {
@@ -250,12 +295,43 @@ function agregarCarrito(item) {
 // Actualizar contador del carrito
 function actualizarContadorCarrito() {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]')
-    cartCount.value = cart.length
+    // Sumar todas las cantidades de los items
+    cartCount.value = cart.reduce((total, item) => total + (item.cantidad || 1), 0)
+}
+
+// Obtener texto del estado según el stock
+function getEstadoTexto(item) {
+    if (!item.stock || item.stock === 0) {
+        return 'VENDIDO'
+    } else if (item.stock <= 2) {
+        return 'A PEDIDO'
+    } else {
+        return 'DISPONIBLE'
+    }
+}
+
+// Obtener clase CSS del badge según el estado
+function getEstadoBadgeClass(item) {
+    if (!item.stock || item.stock === 0) {
+        return 'bg-danger'
+    } else if (item.stock <= 2) {
+        return 'bg-warning text-dark'
+    } else {
+        return 'bg-success'
+    }
 }
 
 onMounted(() => {
     cargarVehiculos()
     actualizarContadorCarrito()
+    
+    // Escuchar evento de actualización de stock
+    window.addEventListener('stockUpdated', cargarVehiculos)
+})
+
+onUnmounted(() => {
+    // Limpiar el listener al desmontar el componente
+    window.removeEventListener('stockUpdated', cargarVehiculos)
 })
 </script>
 

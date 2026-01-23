@@ -28,7 +28,7 @@
             <div class="col-lg-8">
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Productos ({{ items.length }})</h5>
+                        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Productos ({{ totalItems }})</h5>
                     </div>
                     <div class="card-body p-0">
                         <div v-for="(item, idx) in items" :key="idx" class="cart-item">
@@ -44,7 +44,7 @@
                                 </div>
 
                                 <!-- Detalles -->
-                                <div class="col-md-6 p-3">
+                                <div class="col-md-5 p-3">
                                     <h5 class="mb-2">{{ item.marca }} {{ item.modelo }}</h5>
                                     <p class="text-muted mb-1">
                                         <small>
@@ -59,8 +59,31 @@
                                 </div>
 
                                 <!-- Precio y acciones -->
-                                <div class="col-md-3 p-3 text-center">
-                                    <h4 class="text-success mb-3">{{ formatPrecio(item.precio) }}</h4>
+                                <div class="col-md-4 p-3">
+                                    <h4 class="text-success mb-2">{{ formatPrecio(item.precio) }}</h4>
+                                    
+                                    <!-- Control de cantidad -->
+                                    <div class="d-flex align-items-center justify-content-center mb-3">
+                                        <button 
+                                            class="btn btn-sm btn-outline-secondary" 
+                                            @click="decrementarCantidad(idx)"
+                                            :disabled="item.cantidad <= 1"
+                                        >
+                                            <i class="bi bi-dash"></i>
+                                        </button>
+                                        <span class="mx-3 fw-bold">{{ item.cantidad || 1 }}</span>
+                                        <button 
+                                            class="btn btn-sm btn-outline-secondary" 
+                                            @click="incrementarCantidad(idx)"
+                                        >
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <p class="text-muted mb-2">
+                                        <small>Subtotal: {{ formatPrecio(item.precio * (item.cantidad || 1)) }}</small>
+                                    </p>
+                                    
                                     <button class="btn btn-danger btn-sm w-100" @click="eliminar(idx)">
                                         <i class="bi bi-trash"></i> Eliminar
                                     </button>
@@ -252,7 +275,8 @@ const datosTarjeta = ref({
 })
 
 // Cálculos
-const subtotal = computed(() => items.value.reduce((sum, item) => sum + (item.precio || 0), 0))
+const totalItems = computed(() => items.value.reduce((total, item) => total + (item.cantidad || 1), 0))
+const subtotal = computed(() => items.value.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0))
 const iva = computed(() => subtotal.value * 0.21)
 const total = computed(() => subtotal.value + iva.value)
 
@@ -280,6 +304,46 @@ function handleImageError(e) {
     e.target.src = '/placeholder-car.png'
 }
 
+// Incrementar cantidad
+function incrementarCantidad(index) {
+    const item = items.value[index]
+    
+    if (!item.cantidad) {
+        item.cantidad = 1
+    }
+    
+    // Validar stock disponible
+    if (item.stockDisponible && item.cantidad >= item.stockDisponible) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Stock limitado',
+            text: `Solo hay ${item.stockDisponible} ${item.stockDisponible === 1 ? 'unidad disponible' : 'unidades disponibles'} de este vehículo`,
+            timer: 2500
+        })
+        return
+    }
+    
+    item.cantidad++
+    localStorage.setItem('cart', JSON.stringify(items.value))
+    
+    // Disparar evento para actualizar el contador en NavBar
+    window.dispatchEvent(new Event('cartUpdated'))
+}
+
+// Decrementar cantidad
+function decrementarCantidad(index) {
+    if (!items.value[index].cantidad) {
+        items.value[index].cantidad = 1
+    }
+    if (items.value[index].cantidad > 1) {
+        items.value[index].cantidad--
+        localStorage.setItem('cart', JSON.stringify(items.value))
+        
+        // Disparar evento para actualizar el contador en NavBar
+        window.dispatchEvent(new Event('cartUpdated'))
+    }
+}
+
 // Eliminar del carrito
 function eliminar(index) {
     Swal.fire({
@@ -295,6 +359,10 @@ function eliminar(index) {
         if (result.isConfirmed) {
             items.value.splice(index, 1)
             localStorage.setItem('cart', JSON.stringify(items.value))
+            
+            // Disparar evento para actualizar el contador en NavBar
+            window.dispatchEvent(new Event('cartUpdated'))
+            
             Swal.fire('Eliminado', 'El producto ha sido eliminado del carrito', 'success')
         }
     })
@@ -341,6 +409,12 @@ async function procesarPago() {
         localStorage.removeItem('cart')
         items.value = []
         mostrarModalCheckout.value = false
+        
+        // Disparar evento para actualizar el contador en NavBar
+        window.dispatchEvent(new Event('cartUpdated'))
+        
+        // Disparar evento para recargar el stock en VenTas
+        window.dispatchEvent(new Event('stockUpdated'))
 
         // Mostrar éxito
         await Swal.fire({
@@ -519,11 +593,13 @@ function generarFacturaPDF(facturaId) {
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 40%;">Vehículo</th>
+                        <th style="width: 35%;">Vehículo</th>
                         <th>Matrícula</th>
                         <th>Año</th>
                         <th>Kilómetros</th>
-                        <th style="text-align: right;">Precio</th>
+                        <th style="text-align: center;">Cant.</th>
+                        <th style="text-align: right;">Precio Unit.</th>
+                        <th style="text-align: right;">Subtotal</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -533,7 +609,9 @@ function generarFacturaPDF(facturaId) {
                             <td>${item.matricula || 'N/A'}</td>
                             <td>${item.anio}</td>
                             <td>${formatKm(item.kilometros)}</td>
+                            <td style="text-align: center;"><strong>${item.cantidad || 1}</strong></td>
                             <td style="text-align: right;">${formatPrecio(item.precio)}</td>
+                            <td style="text-align: right;"><strong>${formatPrecio(item.precio * (item.cantidad || 1))}</strong></td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -763,11 +841,13 @@ async function imprimirPresupuesto() {
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 40%;">Vehículo</th>
+                        <th style="width: 35%;">Vehículo</th>
                         <th>Matrícula</th>
                         <th>Año</th>
                         <th>Kilómetros</th>
-                        <th style="text-align: right;">Precio</th>
+                        <th style="text-align: center;">Cant.</th>
+                        <th style="text-align: right;">Precio Unit.</th>
+                        <th style="text-align: right;">Subtotal</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -777,7 +857,9 @@ async function imprimirPresupuesto() {
                             <td>${item.matricula || 'N/A'}</td>
                             <td>${item.anio}</td>
                             <td>${formatKm(item.kilometros)}</td>
+                            <td style="text-align: center;"><strong>${item.cantidad || 1}</strong></td>
                             <td style="text-align: right;">${formatPrecio(item.precio)}</td>
+                            <td style="text-align: right;"><strong>${formatPrecio(item.precio * (item.cantidad || 1))}</strong></td>
                         </tr>
                     `).join('')}
                 </tbody>

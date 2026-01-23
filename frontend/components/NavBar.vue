@@ -205,7 +205,12 @@
           </div>
         </div>
         
-        <router-link class="btn btn-sm btn-light me-2" to="/cart">Cesta</router-link>
+        <router-link class="btn btn-sm btn-light me-2 position-relative" to="/cart">
+          <i class="bi bi-cart3"></i>
+          <span v-if="cartItemCount > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            {{ cartItemCount }}
+          </span>
+        </router-link>
         <router-link v-if="isAdmin" class="btn btn-sm btn-warning" to="/admin/clientes">Admin</router-link>
       </div>
     </div>
@@ -239,6 +244,15 @@ const vehiculosResults = computed(() => searchResults.value.filter(r => r._type 
 const citasResults = computed(() => searchResults.value.filter(r => r._type === 'cita'))
 const ventasResults = computed(() => searchResults.value.filter(r => r._type === 'venta'))
 
+// Contador del carrito
+const cartItemCount = ref(0)
+
+const updateCartCount = () => {
+  const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+  // Sumar todas las cantidades de los items
+  cartItemCount.value = cart.reduce((total, item) => total + (item.cantidad || 1), 0)
+}
+
 // Cerrar dropdown al hacer clic fuera
 onMounted(async () => {
   const token = sessionStorage.getItem('token')
@@ -265,6 +279,15 @@ onMounted(async () => {
       userName.value = ''
     }
   }
+
+  // Actualizar contador del carrito
+  updateCartCount()
+  
+  // Escuchar cambios en localStorage
+  window.addEventListener('storage', updateCartCount)
+  
+  // Listener personalizado para actualizaciones desde la misma pestaña
+  window.addEventListener('cartUpdated', updateCartCount)
 
   // Cerrar dropdown al hacer clic fuera
   document.addEventListener('click', (e) => {

@@ -9,6 +9,7 @@ const ArticuloSchema = new mongoose.Schema(
         modelo: { type: String, required: true },
         anio: { type: Number, required: true },
         estado: { type: String, default: "disponible" },
+        stock: { type: Number, default: 1 }, // Cantidad disponible
 
         kilometros: { type: Number, default: 0 },
         precio: { type: Number, required: true },

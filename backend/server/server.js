@@ -15,6 +15,8 @@ import checkoutRouter from './checkoutRoutes.js'
 import printRouter from './printRoutes.js'
 import articulosRouter from './articulosRoutes.js'
 import tallerRouter from './tallerRoutes.js'
+import chatRouter from './chatRoutes.js'
+import testEmailRouter from './testEmailRoutes.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -42,11 +44,8 @@ app.use('/api/checkout', checkoutRouter)
 app.use('/api/print', printRouter)
 app.use('/api/articulos', articulosRouter)
 app.use('/api/taller', tallerRouter)
-
-app.post('/api/chat', (req, res) => {
-    console.log('Chat message:', req.body)
-    res.json({ ok: true })
-})
+app.use('/api/chat', chatRouter)
+app.use('/api/test', testEmailRouter)
 
 const PORT = 5000;
 app.listen(PORT, () => {

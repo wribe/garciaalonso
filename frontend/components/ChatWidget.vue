@@ -7,8 +7,8 @@
       class="chat-button"
       title="Abrir chat con IA"
     >
-  <!-- Mostrar el logo en forma de burbuja en el botón flotante -->
-  <img src="@/assets/logo-chat-bubble-white.svg" alt="Chat" class="chat-button-logo" />
+      <!-- Icono de chat de Bootstrap -->
+      <i class="bi bi-chat-dots-fill"></i>
     </button>
 
     <!-- Ventana del chat -->
@@ -16,15 +16,13 @@
       <!-- Header del chat -->
       <div class="chat-header">
         <div class="header-content">
-          <!-- Logo de la empresa -->
-          <img src="@/assets/logoEmpresaTeis.svg" alt="Logo" class="chat-logo" />
+          <!-- Icono de robot -->
+          <i class="bi bi-robot me-2"></i>
           <span>Asistente Gemini AI</span>
         </div>
         <button @click="toggleChat" class="close-btn" title="Cerrar chat">
-          <!-- Close (crux) symbol as inline SVG -->
-          <svg class="svg-icon svg-icon-close" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M6.225 4.811a1 1 0 0 0-1.414 1.414L10.586 12l-5.775 5.775a1 1 0 1 0 1.414 1.414L12 13.414l5.775 5.775a1 1 0 0 0 1.414-1.414L13.414 12l5.775-5.775a1 1 0 0 0-1.414-1.414L12 10.586 6.225 4.811z" fill="currentColor" />
-          </svg>
+          <!-- Close (X) icon -->
+          <i class="bi bi-x-lg"></i>
         </button>
       </div>
 
@@ -174,46 +172,31 @@ const sendMessage = async () => {
       content: msg.content
     }));
 
-    // Enviar mensaje al backend probando varias URLs (5000, 3000, 3001)
-    const endpoints = [
-      'http://localhost:5000/api/chat/message',
-      'http://localhost:3000/api/chat/message',
-      'http://localhost:3001/api/chat/message'
-    ];
+    // Enviar mensaje al backend
+    const resp = await axios.post('http://localhost:5000/api/chat/message', { 
+      message, 
+      history 
+    }, { 
+      timeout: 10000 
+    });
 
-    let backendResponse = null;
-    for (const url of endpoints) {
-      try {
-        const resp = await axios.post(url, { message, history }, { timeout: 4000 });
-        if (resp && resp.data) {
-          backendResponse = resp.data;
-          break;
-        }
-      } catch (err) {
-        // ignora y prueba el siguiente endpoint
-      }
-    }
-
-    if (backendResponse && backendResponse.success) {
+    if (resp && resp.data && resp.data.success) {
       messages.value.push({
         role: 'assistant',
-        content: backendResponse.response,
+        content: resp.data.response,
         timestamp: getCurrentTime()
       });
     } else {
-      // Fallback local si no hay backend disponible
-      const fallbackLocal = generateLocalReply(message);
-      messages.value.push({
-        role: 'assistant',
-        content: fallbackLocal,
-        timestamp: getCurrentTime()
-      });
+      throw new Error('Respuesta inválida del servidor');
     }
   } catch (error) {
     console.error('Error al enviar mensaje:', error);
+    
+    // Fallback local si hay error de conexión
+    const fallbackLocal = generateLocalReply(message);
     messages.value.push({
       role: 'assistant',
-      content: 'Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta de nuevo.',
+      content: fallbackLocal,
       timestamp: getCurrentTime()
     });
   } finally {
@@ -274,17 +257,8 @@ const generateLocalReply = (userMsg) => {
   box-shadow: 0 6px 16px rgba(100, 108, 255, 0.6);
 }
 
-/* Logo dentro del botón flotante del chat */
-.chat-button-logo {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-  display: block;
-  border-radius: 0; /* don't force round clipping */
-  background: transparent;
-  padding: 0;
-  box-shadow: none;
-  border: none; /* remove white circle/border */
+.chat-button i {
+  font-size: 28px;
 }
 
 /* Inline SVG icon sizing */
@@ -355,14 +329,7 @@ const generateLocalReply = (userMsg) => {
 }
 
 .header-content i {
-  font-size: 20px;
-}
-
-/* Logo pequeño en el header del chat */
-.chat-logo {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
+  font-size: 24px;
 }
 
 .close-btn {
