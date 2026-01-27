@@ -379,6 +379,38 @@
       "lopd": true,
       "tipo": "user",
       "id": "1c26"
+    },
+    {
+      "id": "y6wi",
+      "dni": "39499742W",
+      "nombre": "Carmen",
+      "apellidos": "",
+      "email": "carmenga24teis@gmail.com",
+      "movil": "684146930",
+      "direccion": "CALLE RODRÍGUEZ 19",
+      "provincia": "",
+      "municipio": "",
+      "fecha_alta": "2026-01-27",
+      "historico": false,
+      "lopd": true,
+      "password": "$2b$10$0h9RF438pwgLaUlB06Tbkep0/wlidMj5SnLBIM3Kzx7KHL3Q.BHUy",
+      "tipo": "admin"
+    },
+    {
+      "id": "9z6u",
+      "dni": "55555555K",
+      "nombre": "Admin",
+      "apellidos": "",
+      "email": "admin@admin.com",
+      "movil": "666666666",
+      "direccion": "CALLE RODRÍGUEZ 19",
+      "provincia": "",
+      "municipio": "",
+      "fecha_alta": "2026-01-27",
+      "historico": false,
+      "lopd": true,
+      "password": "$2b$10$TIEmiFoC1raLftQ0esYWlO2ESMlMcH7OYYLx72fEdqu4GFi7nD6t6",
+      "tipo": "user"
     }
   ],
   "noticias": [

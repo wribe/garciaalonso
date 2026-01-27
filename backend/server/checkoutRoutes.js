@@ -1,7 +1,7 @@
 import express from 'express'
-import ModeloVenta from '../modelos/ModeloVenta.js'
 import Articulo from '../modelos/Articulo.js'
-import { v4 as uuidv4 } from 'uuid'
+import Factura from '../modelos/Factura.js'
+
 const router = express.Router()
 
 router.post('/', async (req, res) => {
@@ -12,15 +12,14 @@ router.post('/', async (req, res) => {
         console.log('=== CHECKOUT DEBUG ===')
         console.log('Items recibidos:', JSON.stringify(items, null, 2))
 
-        const invoiceId = uuidv4()
         const purchased = []
         
-        // Actualizar stock de cada artículo
+        // Actualizar stock de cada artículo en MongoDB
         for (const it of items) {
             const cantidad = it.cantidad || 1
             console.log(`\nProcesando item: ${it.id}, cantidad: ${cantidad}`)
             
-            // Buscar en Articulo (la colección de artículos/vehículos)
+            // Buscar en Articulo (MongoDB)
             const articulo = await Articulo.findById(it.id)
             console.log(`Artículo encontrado:`, articulo ? {
                 id: articulo._id,
@@ -50,7 +49,7 @@ router.post('/', async (req, res) => {
                     console.log('Artículo guardado exitosamente')
                     
                     purchased.push({ 
-                        id: articulo._id, 
+                        id: articulo._id.toString(), 
                         matricula: articulo.matricula, 
                         marca: articulo.marca, 
                         modelo: articulo.modelo, 
@@ -65,15 +64,45 @@ router.post('/', async (req, res) => {
             }
         }
 
+        const subtotal = purchased.reduce((s, p) => s + ((p.precio || 0) * (p.cantidad || 1)), 0)
+        const iva = subtotal * 0.21
+        const total = subtotal + iva
+        
+        // Crear factura en MongoDB
+        console.log('💾 Guardando factura en MongoDB...')
+        
+        const nuevaFactura = new Factura({
+            numeroFactura: `FAC-${Date.now()}`,
+            fecha: new Date(),
+            cliente: customer || {
+                nombre: 'Cliente General',
+                dni: '',
+                direccion: '',
+                email: '',
+                telefono: ''
+            },
+            items: purchased,
+            subtotal: subtotal,
+            iva: iva,
+            total: total,
+            estadoPago: 'pagado',
+            metodoPago: customer?.metodoPago || 'efectivo'
+        })
+        
+        await nuevaFactura.save()
+        console.log('✅ Factura guardada en MongoDB:', nuevaFactura.numeroFactura)
+
         console.log('=== FIN CHECKOUT DEBUG ===\n')
 
-        const total = purchased.reduce((s, p) => s + ((p.precio || 0) * (p.cantidad || 1)), 0)
         const invoice = { 
-            invoiceId, 
+            invoiceId: nuevaFactura._id,
+            numeroFactura: nuevaFactura.numeroFactura,
             customer: customer || null, 
             items: purchased, 
+            subtotal,
+            iva,
             total, 
-            createdAt: new Date() 
+            createdAt: nuevaFactura.fecha 
         }
         
         res.json({ success: true, invoice })

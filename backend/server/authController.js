@@ -142,27 +142,42 @@ export const register = async (req, res) => {
     const { dni, password, nombre, email, movil, direccion, tipo } = req.body;
 
     try {
-        const existingUser = await Cliente.findOne({ dni });
+        console.log('📝 Intentando registrar usuario:', { dni, nombre, email });
+        
+        // Validar campos requeridos
+        if (!dni || !password || !nombre || !email || !movil) {
+            console.log('❌ Faltan campos requeridos');
+            return res.status(400).json({ message: 'Faltan campos requeridos' });
+        }
+
+        const existingUser = await Cliente.findOne({ dni: dni.toUpperCase() });
         if (existingUser) {
+            console.log('❌ Usuario ya existe con DNI:', dni);
             return res.status(400).json({ message: 'El usuario ya existe' });
         }
 
         const newUser = new Cliente({
-            dni,
+            dni: dni.toUpperCase(),
             nombre,
             email,
             movil,
-            direccion,
-            tipo: tipo || 'user', // <-- aquí debe ser tipo
-            passwordHash: password
+            direccion: direccion || '',
+            tipo: tipo || 'user',
+            rol: tipo || 'user',
+            activo: true,
+            fecha_alta: new Date()
         });
 
+        // El setter del modelo hará el hash automáticamente
+        newUser.passwordHash = password;
+        
         await newUser.save();
-
-        res.status(201).json({ message: 'Usuario registrado exitosamente' });
+        
+        console.log('✅ Usuario registrado exitosamente:', dni);
+        res.status(201).json({ message: 'Usuario registrado exitosamente', success: true });
     } catch (error) {
-        console.error('Error en el registro:', error);
-        res.status(500).json({ message: 'Error en el servidor' });
+        console.error('❌ Error en el registro:', error);
+        res.status(500).json({ message: 'Error en el servidor: ' + error.message });
     }
 };
 

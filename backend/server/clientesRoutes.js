@@ -4,6 +4,23 @@ import Cliente from '../modelos/Cliente.js'
 import { authMiddleware, adminMiddleware } from './middleware/auth.js'
 const router = express.Router()
 
+// ⚠️ IMPORTANTE: Este endpoint debe ir ANTES de /:id para que no sea capturado
+router.get('/usuario', authMiddleware, async (req, res) => {
+    try {
+        console.log('🔍 Buscando usuario con DNI:', req.user.dni);
+        const cliente = await Cliente.findOne({ dni: req.user.dni }).select('-passwordHash');
+        if (!cliente) {
+            console.log('❌ Cliente no encontrado para DNI:', req.user.dni);
+            return res.status(404).json({ message: 'Cliente no encontrado' });
+        }
+        console.log('✅ Cliente encontrado:', cliente.nombre);
+        res.json(cliente);
+    } catch (error) {
+        console.error('❌ Error al obtener cliente:', error);
+        res.status(500).json({ message: 'Error al obtener cliente' });
+    }
+})
+
 router.post('/registro', async (req, res) => {
   try {
     const { nombre, dni, email, movil, direccion, password } = req.body
@@ -93,16 +110,6 @@ router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
       .select('-passwordHash') // fecha_alta sí se envía
     res.json({ total, page: Number(page), limit: Number(limit), data: clients })
   } catch (err) { res.status(500).json({ error: 'Error' }) }
-})
-
-router.get('/usuario', authMiddleware, async (req, res) => {
-    try {
-        const cliente = await Cliente.findOne({ dni: req.user.dni });
-        if (!cliente) return res.status(404).json({ message: 'Cliente no encontrado' });
-        res.json(cliente);
-    } catch (error) {
-        res.status(500).json({ message: 'Error al obtener cliente' });
-    }
 })
 
 export default router

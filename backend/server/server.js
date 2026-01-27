@@ -7,9 +7,12 @@ import cors from 'cors'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import clientesRouter from './clientesRoutes.js';
+import clientesJsonRouter from './clientesJsonRoutes.js';
+import facturasRouter from './facturasRoutes.js';
 import modelosRouter from './modelosRoutes.js'
 import contactoRouter from './contactoRoutes.js'
 import authRoutes from './authRoutes.js';
+import authJsonRoutes from './authJsonRoutes.js';
 import ventasRouter from './ventasRoutes.js'
 import checkoutRouter from './checkoutRoutes.js'
 import printRouter from './printRoutes.js'
@@ -36,7 +39,10 @@ app.use(cors()); app.use(express.json())
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 app.use('/api/auth', authRoutes);
+app.use('/api/auth-json', authJsonRoutes);
 app.use('/api/clientes', clientesRouter);
+app.use('/api/clientes-json', clientesJsonRouter);
+app.use('/api/facturas', facturasRouter);
 app.use('/api/modelos', modelosRouter)
 app.use('/api/contacto', contactoRouter)
 app.use('/api/ventas', ventasRouter)
