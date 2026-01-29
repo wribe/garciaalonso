@@ -1,8 +1,8 @@
 import axios from 'axios'
 //  librería de JavaScript que actúa como un cliente HTTP 
 // para realizar solicitudes entre el navegador y el servidor,
-// URL base de la "API". Si usas json-server local, asegúrate de la IP:
-const API_URL = 'http://localhost:3000/clientes'
+// URL base de la "API" - usando el backend real con db.json
+const API_URL = '/api/clientes-json'
 
 // Función para obtener la lista de clientes desde la API
 
@@ -18,33 +18,45 @@ export const getClientes = (mostrarHistorico) => {
         url += ``;
     }
 
-    return axios.get(url).then(res => res.data);
+    const token = sessionStorage.getItem('token');
+    return axios.get(url, {
+        headers: { Authorization: token ? `Bearer ${token}` : '' }
+    }).then(res => res.data);
 };
 
 
 //Funcion para eliminar un cliente por su id pasando historico a false
 //Si quieres eliminarla fisicamente, usa axios.delete
 export const deleteCliente = (id) => {
-    return axios.patch(`${API_URL}/${id}`, { historico: false })
-        .then(res => res.data)
+    const token = sessionStorage.getItem('token');
+    return axios.patch(`${API_URL}/${id}`, { historico: false }, {
+        headers: { Authorization: token ? `Bearer ${token}` : '' }
+    }).then(res => res.data)
 }
 
 // Función para agregar cliente nuevo
 export const addCliente = (nuevoCliente) => {
-    return axios.post(API_URL, nuevoCliente)
-        .then(res => res.data)
+    const token = sessionStorage.getItem('token');
+    return axios.post(API_URL, nuevoCliente, {
+        headers: { Authorization: token ? `Bearer ${token}` : '' }
+    }).then(res => res.data)
 }
 // Función para actualizar un cliente por su id
 export const updateCliente = (id, clienteActualizado) => {
-    return axios.put(`${API_URL}/${id}`, clienteActualizado)
-        .then(res => res.data)
+    const token = sessionStorage.getItem('token');
+    return axios.put(`${API_URL}/${id}`, clienteActualizado, {
+        headers: { Authorization: token ? `Bearer ${token}` : '' }
+    }).then(res => res.data)
 }
 
 // 🔹 Buscar cliente por DNI
 export const getClientePorDni = async (dni) => {
     try {
+        const token = sessionStorage.getItem('token');
         // Si tu API permite filtrar por DNI (ej. JSON-Server), puedes hacer:
-        const response = await axios.get(`${API_URL}?dni=${dni}`);
+        const response = await axios.get(`${API_URL}?dni=${dni}`, {
+            headers: { Authorization: token ? `Bearer ${token}` : '' }
+        });
         // Si devuelve un array, retornamos el primer resultado o null si no hay ninguno
         return response.data.length > 0 ? response.data[0] : null;
     } catch (error) {
@@ -57,7 +69,7 @@ export const getClientePorDni = async (dni) => {
 export async function getDni() {
     const token = sessionStorage.getItem('token');
     if (!token) return undefined;
-    const res = await axios.get('/api/clientes/usuario', {
+    const res = await axios.get('/api/clientes-json/usuario', {
         headers: { Authorization: `Bearer ${token}` }
     });
     return res.data.dni;
@@ -65,7 +77,7 @@ export async function getDni() {
 
 // Función para loguear usuario
 export async function loginUsuario(dni, password) {
-    const res = await axios.post("/api/auth/login", { dni, password });
+    const res = await axios.post("/api/auth-json/login", { dni, password });
     return res.data;
 }
 
@@ -75,7 +87,7 @@ export async function getClienteLogueado() {
     if (!token) return null;
 
     try {
-        const response = await axios.get('/api/clientes/usuario', {
+        const response = await axios.get('/api/clientes-json/usuario', {
             headers: { Authorization: `Bearer ${token}` }
         });
         console.log('Respuesta backend usuario:', response.data); // <-- Añade esto

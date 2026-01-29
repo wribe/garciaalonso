@@ -50,7 +50,7 @@ const q = ref('')
 async function load(p = 1) {
     try {
         const token = sessionStorage.getItem('token')
-        const res = await axios.get('/api/clientes', { params: { q: q.value, page: p, limit }, headers: { Authorization: token ? `Bearer ${token}` : '' } })
+        const res = await axios.get('/api/clientes-json', { params: { q: q.value, page: p, limit }, headers: { Authorization: token ? `Bearer ${token}` : '' } })
         clients.value = res.data.data || []
         page.value = res.data.page || p
     } catch (err) { console.error(err) }
@@ -60,13 +60,13 @@ function edit(c) {
     const name = prompt('Nombre:', c.nombre)
     if (!name) return
     const token = sessionStorage.getItem('token')
-    axios.put(`/api/clientes/${c._id}`, { nombre: name }, { headers: { Authorization: token ? `Bearer ${token}` : '' } }).then(() => load(page.value))
+    axios.put(`/api/clientes-json/${c.id}`, { nombre: name }, { headers: { Authorization: token ? `Bearer ${token}` : '' } }).then(() => load(page.value))
 }
 
 function baja(c) {
     if (!confirm('Dar de baja?')) return
     const token = sessionStorage.getItem('token')
-    axios.delete(`/api/clientes/${c._id}`, { headers: { Authorization: token ? `Bearer ${token}` : '' } }).then(() => load(page.value))
+    axios.delete(`/api/clientes-json/${c.id}`, { headers: { Authorization: token ? `Bearer ${token}` : '' } }).then(() => load(page.value))
 }
 
 load()

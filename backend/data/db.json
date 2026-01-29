@@ -381,7 +381,7 @@
       "id": "1c26"
     },
     {
-      "id": "y6wi",
+      "id": "carm",
       "dni": "39499742W",
       "nombre": "Carmen",
       "apellidos": "",
@@ -410,7 +410,23 @@
       "historico": false,
       "lopd": true,
       "password": "$2b$10$TIEmiFoC1raLftQ0esYWlO2ESMlMcH7OYYLx72fEdqu4GFi7nD6t6",
-      "tipo": "user"
+      "tipo": "admin"
+    },
+    {
+      "id": "3zic",
+      "dni": "TEST123",
+      "nombre": "Test",
+      "apellidos": "User",
+      "email": "test@test.com",
+      "movil": "600000000",
+      "direccion": "",
+      "provincia": "",
+      "municipio": "",
+      "tipo": "user",
+      "fecha_alta": "2026-01-29",
+      "historico": false,
+      "lopd": true,
+      "password": "$2b$10$YStIyUlGlCQj9Y2OcLktxeZiCwn0ekZdS1A1DyqhJnFB8a7KWgI0G"
     }
   ],
   "noticias": [

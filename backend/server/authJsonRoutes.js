@@ -32,11 +32,26 @@ router.post('/register', async (req, res) => {
     const { dni, password, nombre, apellidos, email, movil, direccion, provincia, municipio, tipo } = req.body;
 
     try {
+        console.log('📝 BODY COMPLETO RECIBIDO:', JSON.stringify(req.body, null, 2));
         console.log('📝 Intentando registrar usuario en JSON:', { dni, nombre, email });
         
         if (!dni || !password || !nombre || !email || !movil) {
             console.log('❌ Faltan campos requeridos');
-            return res.status(400).json({ message: 'Faltan campos requeridos' });
+            console.log('  - DNI:', dni);
+            console.log('  - Password:', password ? '***' : 'VACÍO');
+            console.log('  - Nombre:', nombre);
+            console.log('  - Email:', email);
+            console.log('  - Móvil:', movil);
+            return res.status(400).json({ 
+                message: 'Faltan campos requeridos',
+                missing: {
+                    dni: !dni,
+                    password: !password,
+                    nombre: !nombre,
+                    email: !email,
+                    movil: !movil
+                }
+            });
         }
 
         const db = await readDB();
@@ -98,6 +113,12 @@ router.post('/login', async (req, res) => {
         if (!user) {
             console.log('❌ Usuario no encontrado:', dni);
             return res.status(400).json({ message: 'Usuario no encontrado' });
+        }
+
+        // Verificar que el usuario tenga contraseña
+        if (!user.password || user.password === '') {
+            console.log('❌ Usuario sin contraseña configurada');
+            return res.status(400).json({ message: 'Usuario sin contraseña configurada. Contacte al administrador.' });
         }
 
         const ok = await bcrypt.compare(password, user.password);

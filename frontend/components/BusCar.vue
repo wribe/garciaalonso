@@ -142,7 +142,7 @@ async function search() {
   // 1. Buscar en CLIENTES (por DNI, nombre, teléfono, email)
   try {
     const token = sessionStorage.getItem('token')
-    const r1 = await axios.get('/api/clientes', { 
+    const r1 = await axios.get('/api/clientes-json', { 
       params: { q: q.value, page: 1, limit: 50 }, 
       headers: { Authorization: token ? `Bearer ${token}` : '' } 
     })

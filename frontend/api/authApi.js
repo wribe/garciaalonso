@@ -3,12 +3,12 @@ import axios from "axios";
 
 export async function registerUsuario(usuario) {
   // usuario: { dni, password, nombre, email, movil, direccion }
-  const res = await axios.post("/api/auth/register", usuario);
+  const res = await axios.post("/api/auth-json/register", usuario);
   return res.data;
 }
 
 export async function loginUsuario(dni, password) {
-  const res = await axios.post("/api/auth/login", { dni, password });
+  const res = await axios.post("/api/auth-json/login", { dni, password });
   return res.data;
 }
 
@@ -16,7 +16,7 @@ export async function loginUsuario(dni, password) {
 export const checkAdmin = async () => {
   const token = sessionStorage.getItem('token');
   if (!token) return { isAdmin: false, name: '' };
-  const res = await axios.get("/api/auth/check-admin", {
+  const res = await axios.get("/api/auth-json/check-admin", {
     headers: { Authorization: `Bearer ${token}` }
   });
   return res.data;
@@ -36,7 +36,7 @@ export const esAdmin = async () => {
       return false;
     }
 
-    const response = await axios.get("http://localhost:5000/api/auth/check-admin", {
+    const response = await axios.get("http://localhost:5000/api/auth-json/check-admin", {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -103,7 +103,7 @@ Este fichero actúa como intermediario entre el frontend (Vue) y el backend (Exp
 
 2. Vue llama a loginUsuario() en api/authApi.js con esos datos y comprueba que no estén vacíos y existe el DNI.
 
-3. loginUsuario() hace una petición POST a http://localhost:5000/api/auth/login.
+3. loginUsuario() hace una petición POST a http://localhost:5000/api/auth-json/login.
 
 4. Express recibe la petición en authRoutes.js y la envía al controlador authController.js YA ESTAMOS EN EL BACKEND
 

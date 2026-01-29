@@ -301,11 +301,10 @@ const clienteVacio = {
   provincia: "",
   municipio: "",
   fecha_alta: "",
-  tipo_cliente: "",
+  tipoCliente: "user",
   historico: false,
   lopd: false,
-  password: "",
-  tipo: "user"
+  password: ""
 }
 
 const nuevoCliente = ref({
@@ -353,8 +352,18 @@ onMounted(async () => {
     const cliente = await getClienteLogueado();
     console.log('Datos de mi perfil:', cliente);
     if (cliente) {
-      nuevoCliente.value = { ...cliente, password: "" };
+      nuevoCliente.value = { 
+        ...cliente, 
+        password: "",
+        tipoCliente: cliente.tipo || "user" // Mapear tipo -> tipoCliente
+      };
       nuevoCliente.value.fecha_alta = formatearFechaParaInput(cliente.fecha_alta);
+      
+      // Activar modo edición para usuarios que están viendo su propio perfil
+      if (!isAdmin.value) {
+        editando.value = true;
+        clienteEditandoId.value = cliente.id;
+      }
     }
   }
 });
@@ -478,7 +487,7 @@ const guardarCliente = async () => {
         provincia: nuevoCliente.value.provincia,
         municipio: nuevoCliente.value.municipio,
         fecha_alta: nuevoCliente.value.fecha_alta,
-        tipo_cliente: nuevoCliente.value.tipoCliente,
+        tipo: nuevoCliente.value.tipoCliente,
         lopd: nuevoCliente.value.lopd
       });
 

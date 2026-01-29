@@ -340,7 +340,7 @@ async function performSearch() {
   const token = sessionStorage.getItem('token')
   if (token && isLogueado.value) {
     try {
-      const r1 = await axios.get('/api/clientes', { 
+      const r1 = await axios.get('/api/clientes-json', { 
         params: { q: q.value, page: 1, limit: 50 }, 
         headers: { Authorization: `Bearer ${token}` } 
       })
