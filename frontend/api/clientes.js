@@ -23,8 +23,10 @@ export const getClientes = async (mostrarHistorico) => {
         let clientes = res.data.data || [];
 
         // Filtrar por histórico en el frontend
+        // Si mostrarHistorico está marcado (true): mostrar todos
+        // Si no está marcado (false): solo mostrar históricos (historico: true)
         if (!mostrarHistorico) {
-            clientes = clientes.filter(c => !c.historico);
+            clientes = clientes.filter(c => c.historico === true);
         }
 
         // Ordenar por apellidos

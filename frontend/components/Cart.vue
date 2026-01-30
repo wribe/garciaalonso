@@ -444,14 +444,39 @@ async function iniciarCheckout() {
         return
     }
     
-    // Cargar datos del usuario si está logueado
+    // Cargar datos del usuario logueado desde la API
     const token = sessionStorage.getItem('token')
     if (token) {
-        const userName = sessionStorage.getItem('userName')
-        if (userName) {
-            datosFacturacion.value.nombre = userName
+        try {
+            // Obtener datos completos del cliente desde el JSON
+            const response = await axios.get('/api/clientes-json/usuario', {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            
+            const cliente = response.data
+            
+            // Autocompletar el formulario con los datos del cliente
+            datosFacturacion.value = {
+                nombre: `${cliente.nombre || ''} ${cliente.apellidos || ''}`.trim() || cliente.nombre || '',
+                dni: cliente.dni || '',
+                email: cliente.email || '',
+                telefono: cliente.movil || '',
+                direccion: cliente.direccion || '',
+                ciudad: cliente.municipio || '',
+                codigoPostal: cliente.codigoPostal || ''
+            }
+            
+            console.log('✅ Datos del cliente cargados:', datosFacturacion.value)
+        } catch (error) {
+            console.error('Error al cargar datos del cliente:', error)
+            // Si hay error, intentar cargar al menos el nombre de sessionStorage
+            const userName = sessionStorage.getItem('userName')
+            if (userName) {
+                datosFacturacion.value.nombre = userName
+            }
         }
     }
+    
     mostrarModalCheckout.value = true
 }
 
@@ -467,7 +492,7 @@ async function procesarPago() {
     try {
         const response = await axios.post('/api/checkout', {
             items: items.value,
-            user: datosFacturacion.value,
+            customer: datosFacturacion.value,
             metodoPago: metodoPago.value,
             subtotal: subtotal.value,
             iva: iva.value,

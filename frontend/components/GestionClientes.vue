@@ -164,7 +164,7 @@
           </div>
 
           <!-- Histórico (derecha) -->
-          <div class="ms-auto me-5">
+          <div v-if="admin" class="ms-auto me-5">
             <div class="form-switch d-flex align-items-center">
               <input type="checkbox" id="historico" v-model="mostrarHistorico" class="form-check-input me-2"
                 @change="cargarClientes" />
@@ -173,10 +173,18 @@
           </div>
         </div>
       </div>
-      <!-- Botón centrado (centro) -->
-      <div class="d-flex justify-content-center align-items-center">
+      <!-- Botones centrados -->
+      <div class="d-flex justify-content-center align-items-center gap-3">
         <button type="submit" class="btn btn-primary border-0 shadow-none rounded-0">
           {{ editando ? "Modificar Cliente" : "Guardar" }}
+        </button>
+        <button 
+          v-if="admin" 
+          type="button" 
+          class="btn btn-success border-0 shadow-none rounded-0"
+          @click="imprimirListadoClientes"
+          title="Descargar listado de clientes en PDF">
+          <i class="bi bi-printer-fill me-2"></i>Imprimir Listado
         </button>
       </div>
     </form>
@@ -287,6 +295,8 @@ import Swal from "sweetalert2";
 import { getClientes, deleteCliente, addCliente, updateCliente, getClientePorDni, getDni, getClienteLogueado } from "@/api/clientes.js";
 import { registerUsuario, loginUsuario, checkAdmin } from "@/api/authApi.js";
 import bcrypt from "bcryptjs";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const router = useRouter();
 
@@ -316,11 +326,11 @@ const repetirPassword = ref("");
 const editando = ref(false);
 const clienteEditandoId = ref(null);
 
-var mostrarHistorico = ref(false);
+const mostrarHistorico = ref(false);
 
-var numClientes = ref(0);
-var currentPage = ref(1);
-var clientesPerPage = ref(10);
+const numClientes = ref(0);
+const currentPage = ref(1);
+const clientesPerPage = ref(10);
 
 const isAdmin = ref(false);
 const admin = ref(false)
@@ -836,6 +846,126 @@ function formatearFechaParaInput(fecha) {
 
   return '';
 }
+
+// Función para imprimir/descargar listado de clientes en PDF
+const imprimirListadoClientes = async () => {
+  try {
+    // Mostrar indicador de carga
+    Swal.fire({
+      title: 'Generando PDF...',
+      text: 'Por favor espere',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Obtener todos los clientes (sin filtro de paginación)
+    const todosLosClientes = await getClientes(mostrarHistorico.value);
+
+    // Crear documento PDF
+    const doc = new jsPDF('landscape'); // Orientación horizontal para más columnas
+
+    // Título
+    doc.setFontSize(18);
+    doc.setFont(undefined, 'bold');
+    doc.text('Listado de Clientes - García Alonso', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+
+    // Fecha de generación y total de clientes en la misma línea
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    const fechaHoy = new Date().toLocaleDateString('es-ES', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    
+    // Fecha a la izquierda
+    doc.text(`Generado el: ${fechaHoy}`, 14, 22);
+    
+    // Total de clientes a la derecha
+    doc.setFont(undefined, 'bold');
+    doc.text(`Total de clientes: ${todosLosClientes.length}`, pageWidth - 14, 22, { align: 'right' });
+    doc.setFont(undefined, 'normal');
+
+    // Preparar datos para la tabla
+    const datosTabla = todosLosClientes.map((cliente, index) => [
+      index + 1,
+      cliente.dni || '-',
+      cliente.apellidos || '-',
+      cliente.nombre || '-',
+      cliente.email || '-',
+      cliente.movil || '-',
+      cliente.direccion || '-',
+      cliente.municipio || '-',
+      cliente.provincia || '-',
+      cliente.fecha_alta ? formatearFechaParaInput(cliente.fecha_alta) : '-',
+      cliente.tipo || cliente.tipoCliente || 'user',
+      cliente.historico ? 'Sí' : 'No'
+    ]);
+
+    // Generar tabla con autoTable
+    autoTable(doc, {
+      startY: 28,
+      head: [['#', 'DNI', 'Apellidos', 'Nombre', 'Email', 'Móvil', 'Dirección', 'Municipio', 'Provincia', 'Fecha Alta', 'Tipo', 'Activo']],
+      body: datosTabla,
+      styles: {
+        fontSize: 8,
+        cellPadding: 2,
+        overflow: 'linebreak',
+      },
+      headStyles: {
+        fillColor: [13, 110, 253], // Color azul Bootstrap primary
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      columnStyles: {
+        0: { cellWidth: 10, halign: 'center' }, // #
+        1: { cellWidth: 20, halign: 'center' }, // DNI
+        2: { cellWidth: 30 }, // Apellidos
+        3: { cellWidth: 25 }, // Nombre
+        4: { cellWidth: 40 }, // Email
+        5: { cellWidth: 20, halign: 'center' }, // Móvil
+        6: { cellWidth: 35 }, // Dirección
+        7: { cellWidth: 25 }, // Municipio
+        8: { cellWidth: 25 }, // Provincia
+        9: { cellWidth: 22, halign: 'center' }, // Fecha Alta
+        10: { cellWidth: 15, halign: 'center' }, // Tipo
+        11: { cellWidth: 15, halign: 'center' } // Activo
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      },
+      margin: { top: 28 }
+    });
+
+    // Descargar el PDF
+    const nombreArchivo = `Listado_Clientes_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(nombreArchivo);
+
+    // Cerrar el indicador de carga y mostrar éxito
+    Swal.fire({
+      icon: 'success',
+      title: 'PDF generado',
+      text: `Se ha descargado el archivo: ${nombreArchivo}`,
+      timer: 2500,
+      showConfirmButton: false
+    });
+
+  } catch (error) {
+    console.error('Error generando PDF:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al generar PDF',
+      text: 'No se pudo generar el listado. Por favor, inténtelo de nuevo.',
+      showConfirmButton: true
+    });
+  }
+};
 </script>
 
 <style scoped>

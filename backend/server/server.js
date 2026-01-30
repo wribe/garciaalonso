@@ -20,6 +20,7 @@ import articulosRouter from './articulosRoutes.js'
 import tallerRouter from './tallerRoutes.js'
 import chatRouter from './chatRoutes.js'
 import testEmailRouter from './testEmailRoutes.js'
+import noticiasRouter from './noticiasRoutes.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -44,6 +45,7 @@ app.use('/api/clientes', clientesRouter);
 app.use('/api/clientes-json', clientesJsonRouter);
 app.use('/api/facturas', facturasRouter);
 app.use('/api/modelos', modelosRouter)
+app.use('/api/noticias', noticiasRouter)
 app.use('/api/contacto', contactoRouter)
 app.use('/api/ventas', ventasRouter)
 app.use('/api/checkout', checkoutRouter)
