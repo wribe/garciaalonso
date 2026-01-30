@@ -26,7 +26,7 @@
           <li v-if="isAdmin" class="nav-item">
             <router-link to="/modelos" class="nav-link">Modelos</router-link>
           </li>
-          <li v-if="isAdmin" class="nav-item">
+          <li class="nav-item">
             <router-link to="/ventas" class="nav-link">Ventas</router-link>
           </li>
           <li class="nav-item">
@@ -222,6 +222,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { esAdmin, checkAdmin } from '@/api/authApi.js'
 import { useRouter } from 'vue-router'
+import { getCartCount, migrateOldCart, clearAllCarts } from '@/utils/cartUtils.js'
 import axios from 'axios'
 
 const isLogueado = ref(false)
@@ -248,13 +249,13 @@ const ventasResults = computed(() => searchResults.value.filter(r => r._type ===
 const cartItemCount = ref(0)
 
 const updateCartCount = () => {
-  const cart = JSON.parse(localStorage.getItem('cart') || '[]')
-  // Sumar todas las cantidades de los items
-  cartItemCount.value = cart.reduce((total, item) => total + (item.cantidad || 1), 0)
+  cartItemCount.value = getCartCount()
 }
 
 // Cerrar dropdown al hacer clic fuera
 onMounted(async () => {
+  migrateOldCart() // Migrar carrito antiguo si existe
+  
   const token = sessionStorage.getItem('token')
   if (!token) {
     isLogueado.value = false
@@ -300,6 +301,7 @@ onMounted(async () => {
 
 function logout() {
   sessionStorage.clear()
+  clearAllCarts() // Limpiar todos los carritos al cerrar sesión
   isLogueado.value = false
   isAdmin.value = false
   isUsuario.value = false

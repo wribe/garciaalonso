@@ -13,6 +13,7 @@ router.post('/', async (req, res) => {
         console.log('Items recibidos:', JSON.stringify(items, null, 2))
 
         const purchased = []
+        const stockErrors = [] // Para rastrear artículos sin stock suficiente
         
         // Actualizar stock de cada artículo en MongoDB
         for (const it of items) {
@@ -60,8 +61,40 @@ router.post('/', async (req, res) => {
                     })
                 } else {
                     console.log(`Stock insuficiente: disponible ${articulo.stock}, solicitado ${cantidad}`)
+                    stockErrors.push({
+                        marca: articulo.marca,
+                        modelo: articulo.modelo,
+                        disponible: articulo.stock,
+                        solicitado: cantidad
+                    })
                 }
+            } else {
+                console.log(`Artículo no encontrado: ${it.id}`)
+                stockErrors.push({
+                    marca: it.marca || 'Desconocido',
+                    modelo: it.modelo || 'Desconocido',
+                    disponible: 0,
+                    solicitado: cantidad
+                })
             }
+        }
+
+        // Si hay errores de stock, devolver error
+        if (stockErrors.length > 0) {
+            console.log('Errores de stock:', stockErrors)
+            return res.status(400).json({ 
+                error: 'Stock insuficiente',
+                message: 'Algunos artículos no tienen stock suficiente',
+                stockErrors: stockErrors
+            })
+        }
+
+        // Si no se pudo comprar ningún artículo, devolver error
+        if (purchased.length === 0) {
+            return res.status(400).json({ 
+                error: 'No se pudo procesar ningún artículo',
+                message: 'Ninguno de los artículos pudo ser procesado'
+            })
         }
 
         const subtotal = purchased.reduce((s, p) => s + ((p.precio || 0) * (p.cantidad || 1)), 0)

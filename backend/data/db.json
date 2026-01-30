@@ -427,6 +427,22 @@
       "historico": false,
       "lopd": true,
       "password": "$2b$10$YStIyUlGlCQj9Y2OcLktxeZiCwn0ekZdS1A1DyqhJnFB8a7KWgI0G"
+    },
+    {
+      "id": "couy",
+      "dni": "00000000T",
+      "nombre": "Ainhoa",
+      "apellidos": "Ainhoa",
+      "email": "ainhoa.martinez@example.com",
+      "movil": "698138059",
+      "direccion": "Calle Rodríguez 19",
+      "provincia": "Pontevedra",
+      "municipio": "Vigo",
+      "tipo": "user",
+      "fecha_alta": "2026-01-30",
+      "historico": false,
+      "lopd": true,
+      "password": "$2b$10$KsSxcWn721Yb/Tx/dYbwCO7j9rWK4Z/XoKpUlQFcG3ZwmE2tLbWvW"
     }
   ],
   "noticias": [

@@ -247,16 +247,23 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import Swal from 'sweetalert2'
+import { getCart, saveCart, clearCart, migrateOldCart } from '@/utils/cartUtils.js'
 
 const router = useRouter()
-const items = ref(JSON.parse(localStorage.getItem('cart') || '[]'))
+const items = ref([])
 const mostrarModalCheckout = ref(false)
 const procesando = ref(false)
 const metodoPago = ref('')
+
+// Cargar carrito al montar el componente
+onMounted(() => {
+    migrateOldCart() // Migrar carrito antiguo si existe
+    items.value = getCart()
+})
 
 const datosFacturacion = ref({
     nombre: '',
@@ -324,7 +331,7 @@ function incrementarCantidad(index) {
     }
     
     item.cantidad++
-    localStorage.setItem('cart', JSON.stringify(items.value))
+    saveCart(items.value)
     
     // Disparar evento para actualizar el contador en NavBar
     window.dispatchEvent(new Event('cartUpdated'))
@@ -337,7 +344,7 @@ function decrementarCantidad(index) {
     }
     if (items.value[index].cantidad > 1) {
         items.value[index].cantidad--
-        localStorage.setItem('cart', JSON.stringify(items.value))
+        saveCart(items.value)
         
         // Disparar evento para actualizar el contador en NavBar
         window.dispatchEvent(new Event('cartUpdated'))
@@ -358,7 +365,7 @@ function eliminar(index) {
     }).then((result) => {
         if (result.isConfirmed) {
             items.value.splice(index, 1)
-            localStorage.setItem('cart', JSON.stringify(items.value))
+            saveCart(items.value)
             
             // Disparar evento para actualizar el contador en NavBar
             window.dispatchEvent(new Event('cartUpdated'))
@@ -368,8 +375,75 @@ function eliminar(index) {
     })
 }
 
+// Validar stock antes de checkout
+async function validarStockDisponible() {
+    try {
+        // Obtener stock actualizado de todos los items
+        const itemsActualizados = await Promise.all(
+            items.value.map(async (item) => {
+                try {
+                    const response = await axios.get(`/api/articulos/${item.id}`)
+                    return {
+                        ...item,
+                        stockActual: response.data.stock
+                    }
+                } catch (error) {
+                    console.error(`Error al obtener stock de ${item.id}:`, error)
+                    return {
+                        ...item,
+                        stockActual: 0
+                    }
+                }
+            })
+        )
+        
+        // Verificar si algún item tiene stock insuficiente
+        const itemsSinStock = itemsActualizados.filter(item => item.cantidad > item.stockActual)
+        
+        if (itemsSinStock.length > 0) {
+            const errorList = itemsSinStock.map(item => 
+                `${item.marca} ${item.modelo}: Solicitado ${item.cantidad}, disponible ${item.stockActual}`
+            ).join('<br>')
+            
+            await Swal.fire({
+                icon: 'warning',
+                title: 'Stock insuficiente',
+                html: `
+                    <p>Algunos artículos ya no tienen stock suficiente:</p>
+                    <div style="text-align: left; margin: 10px 0;">
+                        ${errorList}
+                    </div>
+                    <p><small>Actualizando el carrito...</small></p>
+                `,
+                timer: 3000,
+                showConfirmButton: false
+            })
+            
+            // Actualizar el stock disponible en el carrito
+            items.value = itemsActualizados.map(item => ({
+                ...item,
+                stockDisponible: item.stockActual
+            }))
+            saveCart(items.value)
+            
+            return false
+        }
+        
+        return true
+    } catch (error) {
+        console.error('Error al validar stock:', error)
+        return true // Continuar con el checkout si hay error en la validación
+    }
+}
+
 // Iniciar checkout
-function iniciarCheckout() {
+async function iniciarCheckout() {
+    // Validar stock antes de abrir el modal
+    const stockValido = await validarStockDisponible()
+    if (!stockValido) {
+        return
+    }
+    
     // Cargar datos del usuario si está logueado
     const token = sessionStorage.getItem('token')
     if (token) {
@@ -406,7 +480,7 @@ async function procesarPago() {
         generarFacturaPDF(facturaId)
 
         // Limpiar carrito
-        localStorage.removeItem('cart')
+        clearCart()
         items.value = []
         mostrarModalCheckout.value = false
         
@@ -433,11 +507,36 @@ async function procesarPago() {
         router.push('/')
     } catch (error) {
         console.error('Error en checkout:', error)
-        Swal.fire({
-            icon: 'error',
-            title: 'Error en el pago',
-            text: error.response?.data?.message || 'No se pudo procesar el pago. Por favor, inténtalo de nuevo.',
-        })
+        
+        // Si hay errores de stock, mostrar información detallada
+        if (error.response?.data?.stockErrors) {
+            const stockErrors = error.response.data.stockErrors
+            const errorList = stockErrors.map(err => 
+                `${err.marca} ${err.modelo}: Disponible ${err.disponible}, solicitado ${err.solicitado}`
+            ).join('<br>')
+            
+            await Swal.fire({
+                icon: 'warning',
+                title: 'Stock insuficiente',
+                html: `
+                    <p>Algunos artículos no tienen stock suficiente:</p>
+                    <div style="text-align: left; margin: 10px 0;">
+                        ${errorList}
+                    </div>
+                    <p><small>Por favor, actualiza las cantidades en tu carrito.</small></p>
+                `,
+                confirmButtonText: 'Actualizar carrito'
+            })
+            
+            // Recargar la página del carrito para actualizar el stock
+            window.location.reload()
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error en el pago',
+                text: error.response?.data?.message || 'No se pudo procesar el pago. Por favor, inténtalo de nuevo.',
+            })
+        }
     } finally {
         procesando.value = false
     }

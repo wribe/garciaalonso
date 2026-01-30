@@ -369,11 +369,23 @@ onMounted(async () => {
 });
 
 const updateTabla = () => {
-  getClientes(mostrarHistorico.value).then(data => {
-    clientes.value = data
-    numClientes.value = data.length
-
-  })
+  getClientes(mostrarHistorico.value)
+    .then(data => {
+      clientes.value = data
+      numClientes.value = data.length
+    })
+    .catch(error => {
+      console.error('Error cargando clientes:', error);
+      if (error.response?.status === 401) {
+        // Token inválido o expirado
+        Swal.fire({
+          icon: 'warning',
+          title: 'Sesión expirada',
+          text: 'Por favor, inicie sesión nuevamente',
+          showConfirmButton: true
+        });
+      }
+    })
 }
 
 ///avanzar y retroceder
@@ -685,6 +697,17 @@ const vaciarFormulario = async () => {
   dniValido.value = true;
   movilValido.value = true;
   emailValido.value = true;
+}
+
+// Función para refrescar/limpiar el formulario (alias de vaciarFormulario)
+const refrescarPagina = () => {
+  vaciarFormulario();
+  Swal.fire({
+    icon: 'success',
+    title: 'Formulario limpiado',
+    showConfirmButton: false,
+    timer: 1000
+  });
 }
 
 /* =================================== SCRIPT AUXILIARES =================================== */

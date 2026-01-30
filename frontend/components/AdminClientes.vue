@@ -1,26 +1,31 @@
 <template>
     <div class="container my-4">
-        <h2>Panel Clientes (Admin)</h2>
+        <h2>Panel Administradores</h2>
         <div class="input-group mb-3">
-            <input v-model="q" class="form-control" placeholder="DNI o móvil..." />
+            <input v-model="q" class="form-control" placeholder="Buscar por DNI, nombre o móvil..." />
             <button class="btn btn-primary" @click="load(1)">Buscar</button>
         </div>
-        <table class="table">
+        <div class="alert alert-info" v-if="clients.length === 0">
+            No hay administradores que coincidan con la búsqueda.
+        </div>
+        <table class="table" v-else>
             <thead>
                 <tr>
                     <th>Nombre</th>
                     <th>DNI</th>
                     <th>Email</th>
                     <th>Móvil</th>
+                    <th>Tipo</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="c in clients" :key="c._id">
-                    <td>{{ c.nombre }}</td>
+                <tr v-for="c in clients" :key="c.id">
+                    <td>{{ c.nombre }} {{ c.apellidos }}</td>
                     <td>{{ c.dni }}</td>
                     <td>{{ c.email }}</td>
                     <td>{{ c.movil }}</td>
+                    <td><span class="badge bg-danger">{{ c.tipo }}</span></td>
                     <td>
                         <button class="btn btn-sm btn-warning" @click="edit(c)">Editar</button>
                         <button class="btn btn-sm btn-danger ms-2" @click="baja(c)">Dar baja</button>
@@ -50,10 +55,18 @@ const q = ref('')
 async function load(p = 1) {
     try {
         const token = sessionStorage.getItem('token')
-        const res = await axios.get('/api/clientes-json', { params: { q: q.value, page: p, limit }, headers: { Authorization: token ? `Bearer ${token}` : '' } })
-        clients.value = res.data.data || []
+        const res = await axios.get('/api/clientes-json', { params: { q: q.value, page: p, limit: 1000 }, headers: { Authorization: token ? `Bearer ${token}` : '' } })
+        
+        // Filtrar solo administradores
+        const todosClientes = res.data.data || []
+        clients.value = todosClientes.filter(c => c.tipo === 'admin' || c.tipo === 'administrador')
+        
         page.value = res.data.page || p
-    } catch (err) { console.error(err) }
+        
+        console.log(`Total clientes: ${todosClientes.length}, Administradores: ${clients.value.length}`)
+    } catch (err) { 
+        console.error('Error cargando clientes:', err) 
+    }
 }
 
 function edit(c) {

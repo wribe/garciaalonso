@@ -5,23 +5,43 @@ import axios from 'axios'
 const API_URL = '/api/clientes-json'
 
 // Función para obtener la lista de clientes desde la API
+export const getClientes = async (mostrarHistorico) => {
+    try {
+        const token = sessionStorage.getItem('token');
+        if (!token) {
+            console.error('No hay token de sesión');
+            return [];
+        }
 
-export const getClientes = (mostrarHistorico) => {
-    let url = `${API_URL}?_sort=apellidos&_order=asc`;
+        // El backend devuelve todos los clientes paginados
+        // Parámetros: q (búsqueda), page, limit
+        const res = await axios.get(`${API_URL}?page=1&limit=1000`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
 
-    if (!mostrarHistorico) {
-        // Solo clientes con histórico = true
-        url += `&historico=true`;
+        // El backend devuelve { total, page, limit, data }
+        let clientes = res.data.data || [];
+
+        // Filtrar por histórico en el frontend
+        if (!mostrarHistorico) {
+            clientes = clientes.filter(c => !c.historico);
+        }
+
+        // Ordenar por apellidos
+        clientes.sort((a, b) => {
+            const apellidoA = (a.apellidos || '').toLowerCase();
+            const apellidoB = (b.apellidos || '').toLowerCase();
+            return apellidoA.localeCompare(apellidoB);
+        });
+
+        return clientes;
+    } catch (error) {
+        console.error('Error obteniendo clientes:', error);
+        if (error.response?.status === 401) {
+            console.error('Token inválido o expirado. Por favor, inicie sesión nuevamente.');
+        }
+        throw error;
     }
-    else {
-        // Todos los clientes, sin filtrar por histórico
-        url += ``;
-    }
-
-    const token = sessionStorage.getItem('token');
-    return axios.get(url, {
-        headers: { Authorization: token ? `Bearer ${token}` : '' }
-    }).then(res => res.data);
 };
 
 
@@ -84,16 +104,30 @@ export async function loginUsuario(dni, password) {
 // Nueva función: obtener cliente logueado
 export async function getClienteLogueado() {
     const token = sessionStorage.getItem('token');
-    if (!token) return null;
+    
+    console.log('🔍 getClienteLogueado - Token presente:', !!token);
+    
+    if (!token) {
+        console.log('❌ No hay token en sessionStorage');
+        return null;
+    }
 
     try {
+        console.log('📡 Llamando a /api/clientes-json/usuario...');
         const response = await axios.get('/api/clientes-json/usuario', {
             headers: { Authorization: `Bearer ${token}` }
         });
-        console.log('Respuesta backend usuario:', response.data); // <-- Añade esto
+        console.log('✅ Respuesta backend usuario:', response.data);
         return response.data;
     } catch (error) {
-        console.error('Error obteniendo cliente logueado:', error);
+        console.error('❌ Error obteniendo cliente logueado:', error);
+        console.error('   Status:', error.response?.status);
+        console.error('   Message:', error.response?.data?.message);
+        
+        if (error.response?.status === 401) {
+            console.error('   Token inválido o expirado');
+        }
+        
         return null;
     }
 }

@@ -136,10 +136,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 import ProductoModal from './ProductoModal.vue'
+import { getCart, saveCart, migrateOldCart, getCartCount } from '@/utils/cartUtils.js'
 
 const items = ref([])
 const modalItem = ref(null)
@@ -154,8 +155,13 @@ const cargarVehiculos = async () => {
     cargando.value = true
     try {
         const res = await axios.get('/api/articulos')
-        // Filtrar solo vehículos disponibles para venta
-        items.value = res.data.filter(v => v.estado === 'disponible' || !v.estado)
+        // Filtrar solo vehículos disponibles para venta (excluir vendidos y reservados)
+        items.value = res.data.filter(v => {
+            const estado = v.estado || 'disponible'
+            const stock = v.stock || 0
+            // Mostrar si tiene stock disponible, independientemente del estado
+            return stock > 0 && estado !== 'vendido' && estado !== 'reservado'
+        })
     } catch (error) {
         console.error('Error cargando vehículos:', error)
         Swal.fire('Error', 'No se pudieron cargar los vehículos', 'error')
@@ -227,7 +233,7 @@ function agregarCarrito(item) {
         return
     }
 
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+    const cart = getCart()
     
     // Verificar si ya está en el carrito
     const existente = cart.find(c => c.id === item._id)
@@ -280,7 +286,7 @@ function agregarCarrito(item) {
         })
     }
     
-    localStorage.setItem('cart', JSON.stringify(cart))
+    saveCart(cart)
     actualizarContadorCarrito()
     
     // Disparar evento para actualizar el contador en NavBar
@@ -294,9 +300,7 @@ function agregarCarrito(item) {
 
 // Actualizar contador del carrito
 function actualizarContadorCarrito() {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]')
-    // Sumar todas las cantidades de los items
-    cartCount.value = cart.reduce((total, item) => total + (item.cantidad || 1), 0)
+    cartCount.value = getCartCount()
 }
 
 // Obtener texto del estado según el stock
@@ -322,16 +326,21 @@ function getEstadoBadgeClass(item) {
 }
 
 onMounted(() => {
+    migrateOldCart() // Migrar carrito antiguo si existe
     cargarVehiculos()
     actualizarContadorCarrito()
     
     // Escuchar evento de actualización de stock
     window.addEventListener('stockUpdated', cargarVehiculos)
+    
+    // Escuchar evento de actualización de carrito
+    window.addEventListener('cartUpdated', actualizarContadorCarrito)
 })
 
 onUnmounted(() => {
     // Limpiar el listener al desmontar el componente
     window.removeEventListener('stockUpdated', cargarVehiculos)
+    window.removeEventListener('cartUpdated', actualizarContadorCarrito)
 })
 </script>
 
