@@ -466,7 +466,7 @@ const vaciarFormulario = async () => {
 }
 
 
-// Función única: capitaliza y asigna en el mismo paso
+/*// Función única: capitaliza y asigna en el mismo paso
 const capitalizarTexto = (campo) => {
     const texto = nuevaCita.value[campo] ?? "";
     nuevaCita.value[campo] = texto
@@ -477,7 +477,7 @@ const capitalizarTexto = (campo) => {
             return palabra.charAt(0).toLocaleUpperCase() + palabra.slice(1);
         })
         .join(" ");
-};
+};*/
 
 const matriculaValida = ref(true);
 

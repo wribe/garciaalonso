@@ -111,25 +111,3 @@ router.beforeEach(async (to, from, next) => {
 
 
 export default router;
-
-/*router.beforeEach(async (to, from, next) => {
-    const token = sessionStorage.getItem("token");
-
-    // Si la ruta requiere ser admin
-    if (to.meta.requiresAdmin) {
-
-        // Si no hay token → al login
-        if (!token) return next({ name: "Login" });
-
-        // Consultar al backend si es admin
-        const admin = await esAdmin();
-
-        if (!admin) {
-            return next({ name: "Inicio" }); // acceso denegado
-        }
-    }
-
-    next();
-});
-
-export default router*/

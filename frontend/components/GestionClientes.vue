@@ -298,7 +298,7 @@ import bcrypt from "bcryptjs";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
-const router = useRouter();
+// const router = useRouter();
 
 /* =================================== SCRIPT CRUD =================================== */
 const clienteVacio = {
@@ -338,10 +338,10 @@ const admin = ref(false)
 /// se carga en el onmounted ya que necesita llamar al back
 var dni;
 
-/// Computed: verifica si está editando su propio perfil
+/*/// Computed: verifica si está editando su propio perfil
 const editingCurrentUser = computed(() => {
   return nuevoCliente.value.dni === dni && editando.value;
-});
+});*/
 
 /// Función Listar Clientes con get
 const clientes = ref([]);
