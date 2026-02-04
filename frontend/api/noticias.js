@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const API_URL = 'http://localhost:3000/noticias'
+// Use backend API (server) which serves noticias at /api/noticias
+const API_URL = 'http://localhost:5000/api/noticias'
 
 // 🔹 Obtener todas las noticias, ordenadas por fecha descendente
 export const getNoticias = (titulo) => {
