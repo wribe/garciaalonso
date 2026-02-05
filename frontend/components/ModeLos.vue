@@ -217,7 +217,7 @@
             <td>{{ vehiculoItem.marca }}</td>
             <td>{{ vehiculoItem.modelo }}</td>
             <td class="text-center"><span class="badge" :class="getEstadoClass(vehiculoItem.estado)">
-                {{ vehiculoItem.estado }}
+                {{ displayEstado(vehiculoItem.estado) }}
               </span></td>
             <td class="small">
               <strong>{{ vehiculoItem.contacto.nombre }}</strong> |
@@ -340,7 +340,12 @@ const filtrarCiudades = () => {
   municipiosFiltrados.value = municipios.value.filter((m) =>
     m.id.startsWith(codigoProv)
   );
-  vehiculo.value.ubicacion.ciudad = "";
+  // Preserve existing ciudad if it still belongs to the selected provincia
+  const ciudadActual = vehiculo.value?.ubicacion?.ciudad || '';
+  const existe = municipiosFiltrados.value.some(m => m.nm === ciudadActual);
+  if (!existe) {
+    vehiculo.value.ubicacion.ciudad = "";
+  }
 };
 
 const capitalizarTexto = (campo) => {
@@ -692,7 +697,20 @@ const getEstadoClass = (estado) => {
   if (estadoLower === 'disponible') return 'bg-success';
   if (estadoLower === 'vendido') return 'bg-danger';
   if (estadoLower === 'reservado') return 'bg-warning';
+  if (estadoLower === 'a_pedido') return 'bg-warning text-dark';
   return 'bg-secondary';
+};
+
+// Mostrar texto legible para el estado
+const displayEstado = (estado) => {
+  if (!estado) return '';
+  const map = {
+    disponible: 'Disponible',
+    vendido: 'Vendido',
+    reservado: 'Reservado',
+    a_pedido: 'A pedido'
+  };
+  return map[estado.toLowerCase()] || estado;
 };
 
 </script>

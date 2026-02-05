@@ -88,7 +88,8 @@
 import { ref, onMounted, computed } from 'vue'
 import { esAdmin, checkAdmin } from '@/api/authApi.js'
 import { useRouter } from 'vue-router'
-import { getCartCount, migrateOldCart, clearAllCarts } from '@/utils/cartUtils.js'
+import { useCestaStore } from '../store/cesta.js'
+import { clearAllCarts } from '@/utils/cartUtils.js'
 import axios from 'axios'
 
 const isLogueado = ref(false)
@@ -98,16 +99,13 @@ const userName = ref('')
 const q = ref('')
 const router = useRouter()
 
-// Contador del carrito
-const cartItemCount = ref(0)
-
-const updateCartCount = () => {
-  cartItemCount.value = getCartCount()
-}
+// Pinia store for cart
+const cesta = useCestaStore()
+const cartItemCount = computed(() => cesta.totalItems)
 
 // Cerrar dropdown al hacer clic fuera
 onMounted(async () => {
-  migrateOldCart() // Migrar carrito antiguo si existe
+  cesta.init()
   
   const token = sessionStorage.getItem('token')
   if (!token) {
@@ -134,14 +132,9 @@ onMounted(async () => {
     }
   }
 
-  // Actualizar contador del carrito
-  updateCartCount()
-  
-  // Escuchar cambios en localStorage
-  window.addEventListener('storage', updateCartCount)
-  
-  // Listener personalizado para actualizaciones desde la misma pestaña
-  window.addEventListener('cartUpdated', updateCartCount)
+  // Escuchar cambios en localStorage para compatibilidad (otros scripts)
+  window.addEventListener('storage', () => {})
+  // Pinia store emits cartUpdated via save() already
 })
 
 function logout() {

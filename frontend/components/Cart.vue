@@ -490,6 +490,22 @@ async function procesarPago() {
     procesando.value = true
 
     try {
+        if (metodoPago.value === 'tarjeta') {
+            // Stripe flow: create session and redirect to Stripe Checkout
+            const response = await axios.post('/api/payments/create-session', {
+                items: items.value,
+                customer: datosFacturacion.value
+            })
+            const url = response.data.url
+            if (url) {
+                window.location.href = url
+                return
+            } else {
+                throw new Error('No se pudo crear la sesión de pago')
+            }
+        }
+
+        // Non-card payment: keep legacy flow (transfer, financiacion)
         const response = await axios.post('/api/checkout', {
             items: items.value,
             customer: datosFacturacion.value,

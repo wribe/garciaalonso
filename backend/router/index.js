@@ -14,6 +14,8 @@ import Ventas from '../../frontend/components/VenTas.vue'
 import ResultadosBusqueda from '../../frontend/components/ResultadosBusqueda.vue'
 import Cart from '../../frontend/components/Cart.vue'
 import AdminClientes from '../../frontend/components/AdminClientes.vue'
+import TablaSuccess from '../../frontend/components/TablaSuccess.vue'
+import TablaCancel from '../../frontend/components/TablaCancel.vue'
 
 const routes = [
     {
@@ -69,6 +71,8 @@ const routes = [
     { path: '/ventas', name: 'Ventas', component: Ventas },
     { path: '/buscar', name: 'ResultadosBusqueda', component: ResultadosBusqueda },
     { path: '/cart', name: 'Cart', component: Cart },
+    { path: '/tabla-success', name: 'TablaSuccess', component: TablaSuccess },
+    { path: '/tabla-cancel', name: 'TablaCancel', component: TablaCancel },
     { path: '/admin/clientes', name: 'AdminClientes', component: AdminClientes },
 ]
 

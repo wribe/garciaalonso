@@ -21,6 +21,7 @@ import tallerRouter from './tallerRoutes.js'
 import chatRouter from './chatRoutes.js'
 import testEmailRouter from './testEmailRoutes.js'
 import noticiasRouter from './noticiasRoutes.js'
+import paymentsRouter from './paymentsRoutes.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -54,6 +55,7 @@ app.use('/api/articulos', articulosRouter)
 app.use('/api/taller', tallerRouter)
 app.use('/api/chat', chatRouter)
 app.use('/api/test', testEmailRouter)
+app.use('/api/payments', paymentsRouter)
 
 const PORT = 5000;
 app.listen(PORT, () => {

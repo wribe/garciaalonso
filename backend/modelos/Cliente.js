@@ -17,10 +17,8 @@ const ClienteSchema = new mongoose.Schema({
   lopd: { type: Boolean, default: false }
 }, { timestamps: true })
 
-// Add a simple index to speed up searches by dni/email/movil
-ClienteSchema.index({ dni: 1 })
-ClienteSchema.index({ email: 1 })
-ClienteSchema.index({ movil: 1 })
+// Indexes: unique constraints are defined on the fields (unique: true)
+// Avoid duplicating indexes via both field definitions and schema.index()
 
 const Cliente = mongoose.models.Cliente || mongoose.model('Cliente', ClienteSchema)
 export default Cliente
