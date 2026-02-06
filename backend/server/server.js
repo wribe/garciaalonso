@@ -22,6 +22,7 @@ import chatRouter from './chatRoutes.js'
 import testEmailRouter from './testEmailRoutes.js'
 import noticiasRouter from './noticiasRoutes.js'
 import paymentsRouter from './paymentsRoutes.js'
+import Stripe from 'stripe'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -56,6 +57,47 @@ app.use('/api/taller', tallerRouter)
 app.use('/api/chat', chatRouter)
 app.use('/api/test', testEmailRouter)
 app.use('/api/payments', paymentsRouter)
+
+// Configuración de Stripe cargada desde la clave secreta
+let stripe
+try {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+} catch (err) {
+    console.warn('Stripe no está configurado o no está disponible:', err.message)
+}
+
+// Ruta alternativa para crear sesión de checkout (ejemplo del curso)
+app.post('/crear-checkout-session', async (req, res) => {
+    try {
+        const { items } = req.body
+        if (!items || !Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'No items' })
+
+        if (!stripe) return res.status(500).json({ error: 'Stripe no configurado en el servidor' })
+
+        const lineItems = items.map(item => ({
+            price_data: {
+                currency: 'eur',
+                product_data: { name: item.nombre || `${item.marca || ''} ${item.modelo || ''}`.trim() },
+                unit_amount: Math.round((item.precio || 0) * 100)
+            },
+            quantity: item.cantidad || 1
+        }))
+
+        const FRONTEND = process.env.FRONTEND_URL || 'http://localhost:5173'
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: lineItems,
+            mode: 'payment',
+            success_url: `${FRONTEND}/success`,
+            cancel_url: `${FRONTEND}/cancel`
+        })
+
+        res.json({ url: session.url })
+    } catch (error) {
+        console.error('Error creating checkout session:', error)
+        res.status(500).json({ error: 'Internal Server Error' })
+    }
+})
 
 const PORT = 5000;
 app.listen(PORT, () => {

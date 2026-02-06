@@ -140,7 +140,7 @@ import { ref, computed, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 import ProductoModal from './ProductoModal.vue'
-import { getCart, saveCart, migrateOldCart, getCartCount } from '@/utils/cartUtils.js'
+import { useCestaStore } from '../store/cesta.js'
 
 const items = ref([])
 const modalItem = ref(null)
@@ -148,7 +148,8 @@ const cargando = ref(true)
 const filtroMarca = ref('')
 const filtroTipo = ref('')
 const ordenar = ref('')
-const cartCount = ref(0)
+const cesta = useCestaStore()
+const cartCount = computed(() => cesta.totalItems)
 
 // Cargar vehículos
 const cargarVehiculos = async () => {
@@ -232,82 +233,45 @@ function agregarCarrito(item) {
         })
         return
     }
+    // Use Pinia store for cart operations
+    const result = cesta.addProducto({
+        id: item._id,
+        matricula: item.matricula,
+        marca: item.marca,
+        modelo: item.modelo,
+        anio: item.anio,
+        kilometros: item.kilometros,
+        precio: item.precio,
+        imagen: item.imagen,
+        tipo: item.tipo,
+        cantidad: 1,
+        stockDisponible: item.stock
+    })
 
-    const cart = getCart()
-    
-    // Verificar si ya está en el carrito
-    const existente = cart.find(c => c.id === item._id)
-    
-    // Calcular cantidad total que se tendría en el carrito
-    const cantidadEnCarrito = existente ? existente.cantidad : 0
-    
-    if (cantidadEnCarrito >= item.stock) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Stock insuficiente',
-            text: `Solo hay ${item.stock} ${item.stock === 1 ? 'unidad disponible' : 'unidades disponibles'} de este vehículo`,
-            timer: 2500
-        })
+    if (result && result.ok === false) {
+        Swal.fire({ icon: 'warning', title: 'Stock insuficiente', text: result.message || 'No hay stock suficiente', timer: 2500 })
         return
     }
-    
-    if (existente) {
-        // Si ya existe, incrementar la cantidad
-        existente.cantidad++
-        Swal.fire({
-            icon: 'success',
-            title: '¡Cantidad actualizada!',
-            text: `Ahora tienes ${existente.cantidad} unidades de ${item.marca} ${item.modelo}`,
-            timer: 2000,
-            showConfirmButton: false
-        })
-    } else {
-        // Si no existe, agregarlo con cantidad 1
-        cart.push({
-            id: item._id,
-            matricula: item.matricula,
-            marca: item.marca,
-            modelo: item.modelo,
-            anio: item.anio,
-            kilometros: item.kilometros,
-            precio: item.precio,
-            imagen: item.imagen,
-            tipo: item.tipo,
-            cantidad: 1,
-            stockDisponible: item.stock // Guardar el stock disponible
-        })
-        
-        Swal.fire({
-            icon: 'success',
-            title: '¡Añadido!',
-            text: `${item.marca} ${item.modelo} añadido a la cesta`,
-            timer: 2000,
-            showConfirmButton: false
-        })
-    }
-    
-    saveCart(cart)
-    actualizarContadorCarrito()
-    
-    // Disparar evento para actualizar el contador en NavBar
-    window.dispatchEvent(new Event('cartUpdated'))
+
+    Swal.fire({ icon: 'success', title: '¡Añadido!', text: `${item.marca} ${item.modelo} añadido a la cesta`, timer: 1600, showConfirmButton: false })
 
     // Cerrar modal si está abierto
-    if (modalItem.value) {
-        modalItem.value = null
-    }
+    if (modalItem.value) modalItem.value = null
+    // Notify other components
+    window.dispatchEvent(new Event('cartUpdated'))
 }
 
 // Actualizar contador del carrito
+// contador provisto por Pinia (cartCount es computed)
 function actualizarContadorCarrito() {
-    cartCount.value = getCartCount()
+    // no-op (compatibilidad con listeners que esperan esta función)
 }
 
 // Obtener texto del estado según el stock
 function getEstadoTexto(item) {
     if (!item.stock || item.stock === 0) {
         return 'VENDIDO'
-    } else if (item.stock <= 2) {
+    } else if (item.stock <= 1) {
         return 'A PEDIDO'
     } else {
         return 'DISPONIBLE'
@@ -318,7 +282,7 @@ function getEstadoTexto(item) {
 function getEstadoBadgeClass(item) {
     if (!item.stock || item.stock === 0) {
         return 'bg-danger'
-    } else if (item.stock <= 2) {
+    } else if (item.stock <= 1) {
         return 'bg-warning text-dark'
     } else {
         return 'bg-success'
@@ -326,14 +290,13 @@ function getEstadoBadgeClass(item) {
 }
 
 onMounted(() => {
-    migrateOldCart() // Migrar carrito antiguo si existe
+    // Inicializar Pinia store (migra carrito antiguo si hace falta)
+    cesta.init()
     cargarVehiculos()
-    actualizarContadorCarrito()
-    
+
     // Escuchar evento de actualización de stock
     window.addEventListener('stockUpdated', cargarVehiculos)
-    
-    // Escuchar evento de actualización de carrito
+    // Escuchar evento de actualización de carrito (mantener compatibilidad)
     window.addEventListener('cartUpdated', actualizarContadorCarrito)
 })
 

@@ -42,11 +42,11 @@ const facturaSchema = new mongoose.Schema({
     estadoPago: {
         type: String,
         enum: ['pendiente', 'pagado', 'cancelado'],
-        default: 'pagado'
+        default: 'pendiente'
     },
     metodoPago: {
         type: String,
-        enum: ['efectivo', 'tarjeta', 'transferencia'],
+        enum: ['efectivo', 'tarjeta', 'transferencia', 'financiacion'],
         default: 'efectivo'
     }
 }, {

@@ -12,9 +12,11 @@ router.post('/create-session', async (req, res) => {
     const { items, customer } = req.body
     if (!items || items.length === 0) return res.status(400).json({ message: 'No items' })
 
-    // Create a temporary order id and store the order server-side briefly
-    const orderId = `ord_${Date.now()}_${Math.floor(Math.random() * 10000)}`
-    pendingOrders.set(orderId, { items, customer })
+  // Create a temporary order id and store the order server-side briefly
+  const orderId = `ord_${Date.now()}_${Math.floor(Math.random() * 10000)}`
+  // Ensure metodoPago is set (tarjeta in this flow)
+  const orderCustomer = { ...(customer || {}), metodoPago: (customer?.metodoPago || 'tarjeta') }
+  pendingOrders.set(orderId, { items, customer: orderCustomer })
 
     // Lazy import stripe so the server won't crash if stripe isn't installed
     let stripePkg
@@ -78,9 +80,10 @@ router.post('/confirm-session', async (req, res) => {
       return res.status(400).json({ message: 'Pago no confirmado' })
     }
 
-    // Process order: decrement stock and create invoice
+    // Process order: decrement stock and create invoice. Mark pagoConfirmado
     try {
-      const result = await processOrder(order.items, order.customer)
+      const customerConfirmed = { ...(order.customer || {}), pagoConfirmado: true }
+      const result = await processOrder(order.items, customerConfirmed)
       // Remove pending order
       pendingOrders.delete(orderId)
       return res.json({ success: true, invoice: result.invoice })

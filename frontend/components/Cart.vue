@@ -494,7 +494,7 @@ async function procesarPago() {
             // Stripe flow: create session and redirect to Stripe Checkout
             const response = await axios.post('/api/payments/create-session', {
                 items: items.value,
-                customer: datosFacturacion.value
+                customer: { ...datosFacturacion.value, metodoPago: 'tarjeta' }
             })
             const url = response.data.url
             if (url) {

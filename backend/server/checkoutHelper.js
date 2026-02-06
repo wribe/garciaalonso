@@ -66,6 +66,13 @@ export async function processOrder(items, customer = {}) {
   const iva = subtotal * 0.21
   const total = subtotal + iva
 
+  // Determinar estado de pago: si el cliente indica pagoConfirmado lo respetamos,
+  // si el método es efectivo asumimos pago inmediato, en otro caso dejamos 'pendiente'
+  const metodoPago = customer?.metodoPago || 'efectivo'
+  const estadoPago = customer?.pagoConfirmado
+    ? 'pagado'
+    : (metodoPago === 'efectivo' ? 'pagado' : 'pendiente')
+
   const nuevaFactura = new Factura({
     numeroFactura: `FAC-${Date.now()}`,
     fecha: new Date(),
@@ -76,8 +83,8 @@ export async function processOrder(items, customer = {}) {
     subtotal,
     iva,
     total,
-    estadoPago: 'pagado',
-    metodoPago: customer?.metodoPago || 'efectivo'
+    estadoPago,
+    metodoPago
   })
 
   await nuevaFactura.save()
@@ -91,6 +98,8 @@ export async function processOrder(items, customer = {}) {
       subtotal,
       iva,
       total,
+      metodoPago,
+      estadoPago,
       createdAt: nuevaFactura.fecha
     }
   }
