@@ -236,10 +236,36 @@
           <th class="text-center" scope="col">ID</th>
           <th scope="col">Apellidos</th>
           <th scope="col">Nombre</th>
+          <th class="text-center" scope="col">Tipo</th>
           <th class="text-center" scope="col">Móvil</th>
           <th class="text-center" scope="col">Municipio</th>
           <th class="text-center" scope="col" style="width: 150px">
             Acciones
+          </th>
+        </tr>
+        <!-- Fila de filtros -->
+        <tr class="table-light">
+          <th></th>
+          <th></th>
+          <th></th>
+          <th>
+            <select v-model="filtroTipoCliente" class="form-select form-select-sm border-0 shadow-none">
+              <option value="">Todos</option>
+              <option value="particular">Particular</option>
+              <option value="empresa">Empresa</option>
+            </select>
+          </th>
+          <th></th>
+          <th>
+            <select v-model="filtroMunicipio" class="form-select form-select-sm border-0 shadow-none">
+              <option value="">Todos los municipios</option>
+              <option v-for="mun in municipiosUnicos" :key="mun" :value="mun">{{ mun }}</option>
+            </select>
+          </th>
+          <th class="text-center">
+            <button @click="limpiarFiltrosClientes" class="btn btn-outline-secondary btn-sm" title="Limpiar filtros">
+              <i class="bi bi-x-circle"></i>
+            </button>
           </th>
         </tr>
       </thead>
@@ -248,6 +274,11 @@
           <th scope="row" class="text-center">{{ (currentPage - 1) * clientesPerPage + index + 1 }}</th>
           <td>{{ cliente.apellidos }}</td>
           <td>{{ cliente.nombre }}</td>
+          <td class="text-center">
+            <span class="badge" :class="cliente.tipo === 'empresa' || cliente.tipoCliente === 'empresa' ? 'bg-info' : 'bg-secondary'">
+              {{ cliente.tipo === 'empresa' || cliente.tipoCliente === 'empresa' ? 'Empresa' : 'Particular' }}
+            </span>
+          </td>
           <td class="text-center">{{ cliente.movil }}</td>
           <td class="text-center">{{ cliente.municipio }}</td>
           <td class="text-start">
@@ -332,6 +363,10 @@ const numClientes = ref(0);
 const currentPage = ref(1);
 const clientesPerPage = ref(10);
 
+// Filtros de la tabla
+const filtroTipoCliente = ref('');
+const filtroMunicipio = ref('');
+
 const isAdmin = ref(false);
 const admin = ref(false)
 
@@ -415,11 +450,33 @@ const nextPagina = () => {
   }
 };
 
+// Filtrado de clientes
+const clientesFiltrados = computed(() => {
+  return clientes.value.filter(c => {
+    const coincideTipo = !filtroTipoCliente.value || c.tipo === filtroTipoCliente.value || c.tipoCliente === filtroTipoCliente.value;
+    const coincideMunicipio = !filtroMunicipio.value || c.municipio === filtroMunicipio.value;
+    return coincideTipo && coincideMunicipio;
+  });
+});
+
 const clientesPaginados = computed(() => {
   const start = (currentPage.value - 1) * clientesPerPage.value
   const end = start + clientesPerPage.value
-  return clientes.value.slice(start, end)
+  return clientesFiltrados.value.slice(start, end)
 })
+
+// Obtener municipios únicos para el filtro
+const municipiosUnicos = computed(() => {
+  const municipios = clientes.value.map(c => c.municipio).filter(Boolean);
+  return [...new Set(municipios)].sort();
+});
+
+// Limpiar filtros
+const limpiarFiltrosClientes = () => {
+  filtroTipoCliente.value = '';
+  filtroMunicipio.value = '';
+  currentPage.value = 1;
+};
 
 
 const cargarClientes = () => {
@@ -433,7 +490,7 @@ const cargarClientes = () => {
 }
 
 const totalPages = computed(() => {
-  return Math.ceil(numClientes.value / clientesPerPage.value)
+  return Math.ceil(clientesFiltrados.value.length / clientesPerPage.value)
 })
 
 

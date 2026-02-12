@@ -151,6 +151,15 @@
                     <button type="button" class="btn btn-secondary" @click="$emit('close')">
                         <i class="bi bi-x-circle"></i> Cerrar
                     </button>
+                    <router-link 
+                        v-if="reservasHabilitadas"
+                        :to="{ path: '/reservar', query: { vehiculo: item._id } }"
+                        class="btn btn-warning"
+                        :class="{ 'disabled': !item.stock || item.stock === 0 || item.estado === 'reservado' }"
+                        @click="$emit('close')"
+                    >
+                        <i class="bi bi-bookmark"></i> Reservar
+                    </router-link>
                     <button 
                         type="button" 
                         class="btn btn-success" 
@@ -158,7 +167,7 @@
                         :disabled="!item.stock || item.stock === 0"
                     >
                         <i class="bi bi-cart-plus"></i> 
-                        {{ item.stock && item.stock > 0 ? 'Añadir a la cesta' : 'Sin stock' }}
+                        {{ item.stock && item.stock > 0 ? 'Comprar' : 'Sin stock' }}
                     </button>
                 </div>
             </div>
@@ -167,7 +176,13 @@
 </template>
 
 <script setup>
-const props = defineProps({ item: Object })
+const props = defineProps({ 
+    item: Object,
+    reservasHabilitadas: {
+        type: Boolean,
+        default: true
+    }
+})
 const emit = defineEmits(['close', 'add'])
 
 function add() { 

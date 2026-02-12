@@ -110,14 +110,24 @@
                                 <button class="btn btn-outline-primary" @click="abrirModal(item)">
                                     <i class="bi bi-eye"></i> Ver detalles
                                 </button>
-                                <button 
-                                    class="btn btn-success" 
-                                    @click="agregarCarrito(item)"
-                                    :disabled="!item.stock || item.stock === 0"
-                                >
-                                    <i class="bi bi-cart-plus"></i> 
-                                    {{ item.stock && item.stock > 0 ? 'Añadir a la cesta' : 'Sin stock' }}
-                                </button>
+                                <div class="btn-group">
+                                    <button 
+                                        class="btn btn-success" 
+                                        @click="agregarCarrito(item)"
+                                        :disabled="!item.stock || item.stock === 0"
+                                    >
+                                        <i class="bi bi-cart-plus"></i> 
+                                        {{ item.stock && item.stock > 0 ? 'Comprar' : 'Sin stock' }}
+                                    </button>
+                                    <router-link 
+                                        v-if="reservasHabilitadas"
+                                        :to="{ path: '/reservar', query: { vehiculo: item._id } }"
+                                        class="btn btn-outline-warning"
+                                        :class="{ 'disabled': !item.stock || item.stock === 0 || item.estado === 'reservado' }"
+                                    >
+                                        <i class="bi bi-bookmark"></i> Reservar
+                                    </router-link>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -129,6 +139,7 @@
         <ProductoModal 
             v-if="modalItem" 
             :item="modalItem" 
+            :reservasHabilitadas="reservasHabilitadas"
             @close="modalItem = null" 
             @add="agregarCarrito" 
         />
@@ -148,8 +159,19 @@ const cargando = ref(true)
 const filtroMarca = ref('')
 const filtroTipo = ref('')
 const ordenar = ref('')
+const reservasHabilitadas = ref(true)
 const cesta = useCestaStore()
 const cartCount = computed(() => cesta.totalItems)
+
+// Verificar si las reservas están habilitadas
+const verificarReservasHabilitadas = async () => {
+    try {
+        const response = await axios.get('/api/reservas/config/estado')
+        reservasHabilitadas.value = response.data.habilitadas
+    } catch (error) {
+        reservasHabilitadas.value = true
+    }
+}
 
 // Cargar vehículos
 const cargarVehiculos = async () => {
@@ -293,6 +315,7 @@ onMounted(() => {
     // Inicializar Pinia store (migra carrito antiguo si hace falta)
     cesta.init()
     cargarVehiculos()
+    verificarReservasHabilitadas()
 
     // Escuchar evento de actualización de stock
     window.addEventListener('stockUpdated', cargarVehiculos)

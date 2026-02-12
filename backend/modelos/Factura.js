@@ -31,6 +31,11 @@ const facturaSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    cupon: {
+        codigo: { type: String, default: null },
+        descuentoPorcentaje: { type: Number, default: 0 },
+        descuentoImporte: { type: Number, default: 0 }
+    },
     iva: {
         type: Number,
         required: true

@@ -105,6 +105,52 @@
                             <span>Subtotal:</span>
                             <strong>{{ formatPrecio(subtotal) }}</strong>
                         </div>
+                        
+                        <!-- Campo de cupón -->
+                        <div class="mb-3">
+                            <label class="form-label small text-muted mb-1">¿Tienes un cupón?</label>
+                            <div class="input-group input-group-sm">
+                                <input 
+                                    v-model="codigoCupon" 
+                                    type="text" 
+                                    class="form-control" 
+                                    placeholder="Código cupón"
+                                    :class="{ 'is-valid': cuponAplicado, 'is-invalid': cuponError }"
+                                    :disabled="cuponAplicado"
+                                >
+                                <button 
+                                    v-if="!cuponAplicado"
+                                    class="btn btn-outline-primary" 
+                                    type="button" 
+                                    @click="validarCupon"
+                                    :disabled="!codigoCupon || validandoCupon"
+                                >
+                                    <span v-if="validandoCupon" class="spinner-border spinner-border-sm"></span>
+                                    <span v-else>Aplicar</span>
+                                </button>
+                                <button 
+                                    v-else
+                                    class="btn btn-outline-danger" 
+                                    type="button" 
+                                    @click="quitarCupon"
+                                >
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                            <small v-if="cuponAplicado" class="text-success">
+                                <i class="bi bi-check-circle"></i> Cupón aplicado: -{{ descuentoPorcentaje }}%
+                            </small>
+                            <small v-if="cuponError" class="text-danger">
+                                <i class="bi bi-x-circle"></i> Cupón no válido
+                            </small>
+                        </div>
+                        
+                        <!-- Mostrar descuento si hay cupón aplicado -->
+                        <div v-if="cuponAplicado" class="d-flex justify-content-between mb-2 text-success">
+                            <span><i class="bi bi-tag"></i> Descuento ({{ descuentoPorcentaje }}%):</span>
+                            <strong>-{{ formatPrecio(descuentoImporte) }}</strong>
+                        </div>
+                        
                         <div class="d-flex justify-content-between mb-2">
                             <span>IVA (21%):</span>
                             <strong>{{ formatPrecio(iva) }}</strong>
@@ -224,7 +270,23 @@
                             </div>
 
                             <div class="alert alert-success mt-3">
-                                <strong>Total a pagar:</strong> {{ formatPrecio(total) }}
+                                <div class="d-flex justify-content-between">
+                                    <span>Subtotal:</span>
+                                    <strong>{{ formatPrecio(subtotal) }}</strong>
+                                </div>
+                                <div v-if="cuponAplicado" class="d-flex justify-content-between text-success">
+                                    <span><i class="bi bi-tag"></i> Descuento ({{ descuentoPorcentaje }}%):</span>
+                                    <strong>-{{ formatPrecio(descuentoImporte) }}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>IVA (21%):</span>
+                                    <strong>{{ formatPrecio(iva) }}</strong>
+                                </div>
+                                <hr class="my-2">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Total a pagar:</strong>
+                                    <strong>{{ formatPrecio(total) }}</strong>
+                                </div>
                             </div>
 
                             <div class="d-grid gap-2">
@@ -259,6 +321,13 @@ const mostrarModalCheckout = ref(false)
 const procesando = ref(false)
 const metodoPago = ref('')
 
+// Variables para cupones
+const codigoCupon = ref('')
+const cuponAplicado = ref(false)
+const descuentoPorcentaje = ref(0)
+const cuponError = ref(false)
+const validandoCupon = ref(false)
+
 // Cargar carrito al montar el componente
 onMounted(() => {
     migrateOldCart() // Migrar carrito antiguo si existe
@@ -284,8 +353,10 @@ const datosTarjeta = ref({
 // Cálculos
 const totalItems = computed(() => items.value.reduce((total, item) => total + (item.cantidad || 1), 0))
 const subtotal = computed(() => items.value.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0))
-const iva = computed(() => subtotal.value * 0.21)
-const total = computed(() => subtotal.value + iva.value)
+const descuentoImporte = computed(() => cuponAplicado.value ? subtotal.value * (descuentoPorcentaje.value / 100) : 0)
+const subtotalConDescuento = computed(() => subtotal.value - descuentoImporte.value)
+const iva = computed(() => subtotalConDescuento.value * 0.21)
+const total = computed(() => subtotalConDescuento.value + iva.value)
 
 // Formatear precio
 function formatPrecio(precio) {
@@ -309,6 +380,51 @@ function getImageUrl(imagen) {
 // Manejar error de imagen
 function handleImageError(e) {
     e.target.src = '/placeholder-car.png'
+}
+
+// Validar cupón
+async function validarCupon() {
+    if (!codigoCupon.value) return
+    
+    validandoCupon.value = true
+    cuponError.value = false
+    
+    try {
+        const response = await axios.post('/api/checkout/validar-cupon', {
+            codigo: codigoCupon.value
+        })
+        
+        if (response.data.valido) {
+            cuponAplicado.value = true
+            descuentoPorcentaje.value = response.data.descuento
+            codigoCupon.value = response.data.codigo
+            
+            Swal.fire({
+                icon: 'success',
+                title: '¡Cupón aplicado!',
+                text: `Descuento del ${response.data.descuento}% aplicado a tu compra`,
+                timer: 2000,
+                showConfirmButton: false
+            })
+        } else {
+            cuponError.value = true
+            cuponAplicado.value = false
+            descuentoPorcentaje.value = 0
+        }
+    } catch (error) {
+        console.error('Error al validar cupón:', error)
+        cuponError.value = true
+    } finally {
+        validandoCupon.value = false
+    }
+}
+
+// Quitar cupón
+function quitarCupon() {
+    codigoCupon.value = ''
+    cuponAplicado.value = false
+    descuentoPorcentaje.value = 0
+    cuponError.value = false
 }
 
 // Incrementar cantidad
@@ -494,7 +610,8 @@ async function procesarPago() {
             // Stripe flow: create session and redirect to Stripe Checkout
             const response = await axios.post('/api/payments/create-session', {
                 items: items.value,
-                customer: { ...datosFacturacion.value, metodoPago: 'tarjeta' }
+                customer: { ...datosFacturacion.value, metodoPago: 'tarjeta' },
+                cupon: cuponAplicado.value ? codigoCupon.value : null
             })
             const url = response.data.url
             if (url) {
@@ -510,6 +627,7 @@ async function procesarPago() {
             items: items.value,
             customer: datosFacturacion.value,
             metodoPago: metodoPago.value,
+            cupon: cuponAplicado.value ? codigoCupon.value : null,
             subtotal: subtotal.value,
             iva: iva.value,
             total: total.value
@@ -763,6 +881,12 @@ function generarFacturaPDF(facturaId) {
                         <td><strong>Subtotal:</strong></td>
                         <td style="text-align: right;">${formatPrecio(subtotal.value)}</td>
                     </tr>
+                    ${cuponAplicado.value ? `
+                    <tr style="color: #198754;">
+                        <td><strong>🏷️ Cupón (${codigoCupon.value}) -${descuentoPorcentaje.value}%:</strong></td>
+                        <td style="text-align: right;">-${formatPrecio(descuentoImporte.value)}</td>
+                    </tr>
+                    ` : ''}
                     <tr>
                         <td><strong>IVA (21%):</strong></td>
                         <td style="text-align: right;">${formatPrecio(iva.value)}</td>

@@ -16,6 +16,8 @@ import Cart from '../../frontend/components/Cart.vue'
 import AdminClientes from '../../frontend/components/AdminClientes.vue'
 import TablaSuccess from '../../frontend/components/TablaSuccess.vue'
 import TablaCancel from '../../frontend/components/TablaCancel.vue'
+import ReservaVehiculo from '../../frontend/components/ReservaVehiculo.vue'
+import AdminReservas from '../../frontend/components/AdminReservas.vue'
 
 const routes = [
     {
@@ -73,6 +75,8 @@ const routes = [
     { path: '/cart', name: 'Cart', component: Cart },
     { path: '/tabla-success', name: 'TablaSuccess', component: TablaSuccess },
     { path: '/tabla-cancel', name: 'TablaCancel', component: TablaCancel },
+    { path: '/reservar', name: 'ReservaVehiculo', component: ReservaVehiculo },
+    { path: '/admin/reservas', name: 'AdminReservas', component: AdminReservas, meta: { requiresAuth: true, requiresAdmin: true } },
     { path: '/admin/clientes', name: 'AdminClientes', component: AdminClientes },
 ]
 

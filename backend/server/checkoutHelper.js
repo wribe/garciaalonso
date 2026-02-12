@@ -1,12 +1,35 @@
 import Articulo from '../modelos/Articulo.js'
 import Factura from '../modelos/Factura.js'
 
+// Cupones válidos con su porcentaje de descuento
+const CUPONES_VALIDOS = {
+  'DESCUENTO10': 10,
+  'DESCUENTO15': 15,
+  'DESCUENTO20': 20,
+  'BIENVENIDO5': 5,
+  'VERANO25': 25,
+  'BLACKFRIDAY30': 30
+}
+
+/**
+ * Valida un cupón y devuelve el porcentaje de descuento
+ */
+export function validarCupon(codigo) {
+  if (!codigo) return { valido: false, descuento: 0 }
+  const codigoUpper = codigo.toUpperCase().trim()
+  const descuento = CUPONES_VALIDOS[codigoUpper]
+  if (descuento) {
+    return { valido: true, descuento, codigo: codigoUpper }
+  }
+  return { valido: false, descuento: 0 }
+}
+
 /**
  * Procesa un pedido: valida stock, decrementa artículos y crea factura en MongoDB.
  * Retorna el objeto invoice si tiene éxito.
  * Lanza un error con .stockErrors si hay problemas de stock.
  */
-export async function processOrder(items, customer = {}) {
+export async function processOrder(items, customer = {}, cuponCodigo = null) {
   if (!items || !Array.isArray(items) || items.length === 0) {
     const err = new Error('No items')
     err.status = 400
@@ -63,8 +86,23 @@ export async function processOrder(items, customer = {}) {
   }
 
   const subtotal = purchased.reduce((s, p) => s + ((p.precio || 0) * (p.cantidad || 1)), 0)
-  const iva = subtotal * 0.21
-  const total = subtotal + iva
+  
+  // Calcular descuento si hay cupón válido
+  let cuponData = { codigo: null, descuentoPorcentaje: 0, descuentoImporte: 0 }
+  if (cuponCodigo) {
+    const validacion = validarCupon(cuponCodigo)
+    if (validacion.valido) {
+      cuponData = {
+        codigo: validacion.codigo,
+        descuentoPorcentaje: validacion.descuento,
+        descuentoImporte: subtotal * (validacion.descuento / 100)
+      }
+    }
+  }
+  
+  const subtotalConDescuento = subtotal - cuponData.descuentoImporte
+  const iva = subtotalConDescuento * 0.21
+  const total = subtotalConDescuento + iva
 
   // Determinar estado de pago: si el cliente indica pagoConfirmado lo respetamos,
   // si el método es efectivo asumimos pago inmediato, en otro caso dejamos 'pendiente'
@@ -81,6 +119,7 @@ export async function processOrder(items, customer = {}) {
     },
     items: purchased,
     subtotal,
+    cupon: cuponData,
     iva,
     total,
     estadoPago,
@@ -96,6 +135,7 @@ export async function processOrder(items, customer = {}) {
       customer: customer || null,
       items: purchased,
       subtotal,
+      cupon: cuponData,
       iva,
       total,
       metodoPago,

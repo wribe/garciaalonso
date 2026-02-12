@@ -1,11 +1,22 @@
 import express from 'express'
-import processOrder from './checkoutHelper.js'
+import processOrder, { validarCupon } from './checkoutHelper.js'
 
 const router = express.Router()
 
+// Endpoint para validar cupón
+router.post('/validar-cupon', (req, res) => {
+  try {
+    const { codigo } = req.body
+    const resultado = validarCupon(codigo)
+    res.json(resultado)
+  } catch (err) {
+    res.status(500).json({ error: 'Error al validar cupón' })
+  }
+})
+
 router.post('/', async (req, res) => {
   try {
-    const { items, customer = {}, metodoPago } = req.body
+    const { items, customer = {}, metodoPago, cupon } = req.body
 
     // Asegurarnos de que el método de pago quede reflejado en el objeto cliente
     customer.metodoPago = metodoPago || customer.metodoPago || 'efectivo'
@@ -15,7 +26,7 @@ router.post('/', async (req, res) => {
       customer.pagoConfirmado = true
     }
 
-    const result = await processOrder(items, customer)
+    const result = await processOrder(items, customer, cupon)
     res.json({ success: true, invoice: result.invoice })
   } catch (err) {
     console.error('ERROR EN CHECKOUT:', err)

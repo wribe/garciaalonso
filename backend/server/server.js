@@ -22,6 +22,7 @@ import chatRouter from './chatRoutes.js'
 import testEmailRouter from './testEmailRoutes.js'
 import noticiasRouter from './noticiasRoutes.js'
 import paymentsRouter from './paymentsRoutes.js'
+import reservasRouter from './reservasRoutes.js'
 import Stripe from 'stripe'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -57,6 +58,7 @@ app.use('/api/taller', tallerRouter)
 app.use('/api/chat', chatRouter)
 app.use('/api/test', testEmailRouter)
 app.use('/api/payments', paymentsRouter)
+app.use('/api/reservas', reservasRouter)
 
 // Configuración de Stripe cargada desde la clave secreta
 let stripe

@@ -204,9 +204,47 @@
             <th class="text-center">Matrícula</th>
             <th class="text-center">Marca</th>
             <th class="text-center">Modelo</th>
+            <th class="text-center">Precio</th>
             <th class="text-center">Estado</th>
             <th class="text-center">Contacto</th>
             <th class="text-center w-10">Acciones</th>
+          </tr>
+          <!-- Fila de filtros -->
+          <tr class="table-light">
+            <th></th>
+            <th>
+              <select v-model="filtroMarca" class="form-select form-select-sm border-0 shadow-none">
+                <option value="">Todas las marcas</option>
+                <option v-for="marca in marcasUnicas" :key="marca" :value="marca">{{ marca }}</option>
+              </select>
+            </th>
+            <th></th>
+            <th>
+              <select v-model="filtroPrecio" class="form-select form-select-sm border-0 shadow-none">
+                <option value="">Todos los precios</option>
+                <option value="0-5000">Hasta 5.000€</option>
+                <option value="5000-10000">5.000€ - 10.000€</option>
+                <option value="10000-20000">10.000€ - 20.000€</option>
+                <option value="20000-30000">20.000€ - 30.000€</option>
+                <option value="30000-50000">30.000€ - 50.000€</option>
+                <option value="50000-100000">50.000€ - 100.000€</option>
+                <option value="100000-999999999">Más de 100.000€</option>
+              </select>
+            </th>
+            <th>
+              <select v-model="filtroEstado" class="form-select form-select-sm border-0 shadow-none">
+                <option value="">Todos</option>
+                <option value="disponible">Disponible</option>
+                <option value="vendido">Vendido</option>
+                <option value="reservado">Reservado</option>
+              </select>
+            </th>
+            <th></th>
+            <th class="text-center">
+              <button @click="limpiarFiltros" class="btn btn-outline-secondary btn-sm" title="Limpiar filtros">
+                <i class="bi bi-x-circle"></i>
+              </button>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -216,6 +254,7 @@
             </th>
             <td>{{ vehiculoItem.marca }}</td>
             <td>{{ vehiculoItem.modelo }}</td>
+            <td class="text-end">{{ formatPrecio(vehiculoItem.precio) }}</td>
             <td class="text-center"><span class="badge" :class="getEstadoClass(vehiculoItem.estado)">
                 {{ displayEstado(vehiculoItem.estado) }}
               </span></td>
@@ -258,6 +297,11 @@ import provmuniData from "../../backend/data/provmuni.json"
 const vehiculos = ref([]);
 const currentPage = ref(1);
 const vehiculosPerPage = 10;
+
+// Filtros de la tabla
+const filtroMarca = ref('');
+const filtroEstado = ref('');
+const filtroPrecio = ref('');
 
 const vehiculo = ref({
   tipo: "",
@@ -305,15 +349,57 @@ const cargarVehiculos = async () => {
 };
 
 // Paginación
+const vehiculosFiltrados = computed(() => {
+  return vehiculos.value.filter(v => {
+    const coincideMarca = !filtroMarca.value || v.marca === filtroMarca.value;
+    const coincideEstado = !filtroEstado.value || v.estado === filtroEstado.value;
+    
+    // Filtro por precio
+    let coincidePrecio = true;
+    if (filtroPrecio.value) {
+      const [min, max] = filtroPrecio.value.split('-').map(Number);
+      const precio = Number(v.precio) || 0;
+      coincidePrecio = precio >= min && precio <= max;
+    }
+    
+    return coincideMarca && coincideEstado && coincidePrecio;
+  });
+});
+
 const vehiculosPaginados = computed(() => {
   const start = (currentPage.value - 1) * vehiculosPerPage;
   const end = start + vehiculosPerPage;
-  return vehiculos.value.slice(start, end);
+  return vehiculosFiltrados.value.slice(start, end);
 });
 
 const totalPages = computed(() => {
-  return Math.ceil(vehiculos.value.length / vehiculosPerPage);
+  return Math.ceil(vehiculosFiltrados.value.length / vehiculosPerPage);
 });
+
+// Obtener marcas únicas para el filtro
+const marcasUnicas = computed(() => {
+  const marcas = vehiculos.value.map(v => v.marca).filter(Boolean);
+  return [...new Set(marcas)].sort();
+});
+
+// Limpiar filtros
+const limpiarFiltros = () => {
+  filtroMarca.value = '';
+  filtroEstado.value = '';
+  filtroPrecio.value = '';
+  currentPage.value = 1;
+};
+
+// Formatear precio
+const formatPrecio = (precio) => {
+  if (!precio && precio !== 0) return '-';
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(precio);
+};
 
 const beforePagina = () => {
   if (currentPage.value > 1) currentPage.value--;
